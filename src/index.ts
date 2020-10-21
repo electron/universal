@@ -151,7 +151,6 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       );
     }
 
-    console.log(x64MachOFiles);
     for (const machOFile of x64MachOFiles) {
       await spawn('lipo', [
         await fs.realpath(path.resolve(tmpApp, machOFile)),
