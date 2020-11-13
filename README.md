@@ -1,6 +1,6 @@
 # @electron/universal
 
-> Create universal macOS Electron applicatiojns
+> Create universal macOS Electron applications
 
 [![CircleCI](https://circleci.com/gh/electron/universal.svg?style=svg)](https://circleci.com/gh/electron/universal)
 
