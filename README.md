@@ -4,12 +4,8 @@
 
 [![CircleCI](https://circleci.com/gh/electron/universal.svg?style=svg)](https://circleci.com/gh/electron/universal)
 
-## Disclaimer
-
-Work In Progress
 
 ## Usage
-
 
 ```typescript
 import { makeUniversalApp } from '@electron/universal';
@@ -20,3 +16,17 @@ await makeUniversalApp({
   outAppPath: 'path/to/App_universal.app',
 });
 ```
+
+## FAQ
+
+#### The app is twice as big now, why?
+
+Well, a Universal app isn't anything magical.  It is literally the x64 app and
+the arm64 app glued together into a single application.  It's twice as big
+because it contains two apps in one.
+
+#### What about native modules?
+
+The way `@electron/universal` works today means you don't need to worry about
+things like building universal versions of your native modules.  As long as
+your x64 and arm64 apps work in isolation the Universal app will work as well.
