@@ -25,7 +25,7 @@ jobs:
 
   release:
     docker:
-      - image: circleci/node:10.15
+      - image: circleci/node:10.18
     steps:
       - checkout
       - *step-restore-cache
