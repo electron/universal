@@ -21,7 +21,8 @@
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json",
     "lint": "prettier --check \"src/**/*.ts\"",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "exit 0"
   },
   "devDependencies": {
     "@continuous-auth/semantic-release-npm": "^2.0.0",
@@ -36,7 +37,6 @@
   "dependencies": {
     "@malept/cross-spawn-promise": "^1.1.0",
     "asar": "^3.0.3",
-    "fs-extra": "^9.0.1",
-    "macho": "^1.4.0"
+    "fs-extra": "^9.0.1"
   }
 }

@@ -6,19 +6,6 @@ import * as os from 'os';
 import * as path from 'path';
 
 const MACHO_PREFIX = 'Mach-O ';
-const macho = require('macho');
-
-const machoParse = async (
-  p: string,
-): Promise<{
-  bits: number;
-  cpu: {
-    type: 'x86_64' | 'arm64';
-    subtype: string;
-  };
-}> => {
-  return macho.parse(await fs.readFile(p));
-};
 
 type MakeUniversalOpts = {
   /**
@@ -46,9 +33,8 @@ enum AsarMode {
   HAS_ASAR,
 }
 
-const detectAsarMode = async (appPath: string) => {
+export const detectAsarMode = async (appPath: string) => {
   const asarPath = path.resolve(appPath, 'Contents', 'Resources', 'app.asar');
-  const asarUnpackedPath = path.resolve(appPath, 'Contents', 'Resources', 'app.asar.unpacked');
 
   if (!(await fs.pathExists(asarPath))) return AsarMode.NO_ASAR;
   
