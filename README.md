@@ -30,3 +30,7 @@ because it contains two apps in one.
 The way `@electron/universal` works today means you don't need to worry about
 things like building universal versions of your native modules.  As long as
 your x64 and arm64 apps work in isolation the Universal app will work as well.
+
+#### How do I build my app for Apple silicon in the first place?
+
+Check out the [Electron Apple silicon blog post](https://www.electronjs.org/blog/apple-silicon)
