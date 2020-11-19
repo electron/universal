@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
+import * as dircompare from 'dir-compare';
 
 const MACHO_PREFIX = 'Mach-O ';
 
@@ -174,34 +175,48 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
     }
 
     if (x64AsarMode === AsarMode.NO_ASAR) {
-      await fs.move(path.resolve(tmpApp, 'Contents', 'Resources', 'app'), path.resolve(tmpApp, 'Contents', 'Resources', 'x64.app'));
-      await fs.copy(path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app'), path.resolve(tmpApp, 'Contents', 'Resources', 'arm64.app'));
-    } else {
-      await fs.move(path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'), path.resolve(tmpApp, 'Contents', 'Resources', 'x64.app.asar'));
-      const x64Unpacked = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar.unpacked');
-      if (await fs.pathExists(x64Unpacked)) {
-        await fs.move(x64Unpacked, path.resolve(tmpApp, 'Contents', 'Resources', 'x64.app.asar.unpacked'));
-      }
+      const comparison = dircompare.compareSync(path.resolve(tmpApp, 'Contents', 'Resources', 'app'), path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app'), { compareSize: true, compareContent: true });
 
-      await fs.copy(path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar'), path.resolve(tmpApp, 'Contents', 'Resources', 'arm64.app.asar'));
-      const arm64Unpacked = path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar.unpacked');
-      if (await fs.pathExists(arm64Unpacked)) {
-        await fs.copy(arm64Unpacked, path.resolve(tmpApp, 'Contents', 'Resources', 'arm64.app.asar.unpacked'));
+      if (!comparison.same) {
+        await fs.move(path.resolve(tmpApp, 'Contents', 'Resources', 'app'), path.resolve(tmpApp, 'Contents', 'Resources', 'app-x64'));
+        await fs.copy(path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app'), path.resolve(tmpApp, 'Contents', 'Resources', 'app-arm64'));
+
+        const entryAsar = path.resolve(tmpDir, 'entry-asar');
+        await fs.mkdir(entryAsar);
+        await fs.copy(path.resolve(__dirname, '..', '..', 'entry-asar', 'no-asar.js'), path.resolve(entryAsar, 'index.js'));
+        let pj = await fs.readJson(path.resolve(opts.x64AppPath, 'Contents', 'Resources', 'app', 'package.json'));
+        pj.main = 'index.js';
+        await fs.writeJson(path.resolve(entryAsar, 'package.json'), pj);
+        await asar.createPackage(entryAsar, path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'));
       }
     }
 
-    const entryAsar = path.resolve(tmpDir, 'entry-asar');
-    await fs.mkdir(entryAsar);
-    await fs.copy(path.resolve(__dirname, '..', '..', 'entry-asar', 'index.js'), path.resolve(entryAsar, 'index.js'));
-    let pj: any;
-    if (x64AsarMode === AsarMode.NO_ASAR) {
-      pj = await fs.readJson(path.resolve(opts.x64AppPath, 'Contents', 'Resources', 'app', 'package.json'));
-    } else {
-      pj = JSON.parse((await asar.extractFile(path.resolve(opts.x64AppPath, 'Contents', 'Resources', 'app.asar'), 'package.json')).toString('utf8'));
+    if (x64AsarMode === AsarMode.HAS_ASAR) {
+      const x64AsarSha = await sha(path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'));
+      const arm64AsarSha = await sha(path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar'));
+      
+      if (x64AsarSha !== arm64AsarSha) {
+        await fs.move(path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'), path.resolve(tmpApp, 'Contents', 'Resources', 'app-x64.asar'));
+        const x64Unpacked = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar.unpacked');
+        if (await fs.pathExists(x64Unpacked)) {
+          await fs.move(x64Unpacked, path.resolve(tmpApp, 'Contents', 'Resources', 'app-x64.asar.unpacked'));
+        }
+
+        await fs.copy(path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar'), path.resolve(tmpApp, 'Contents', 'Resources', 'app-arm64.asar'));
+        const arm64Unpacked = path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar.unpacked');
+        if (await fs.pathExists(arm64Unpacked)) {
+          await fs.copy(arm64Unpacked, path.resolve(tmpApp, 'Contents', 'Resources', 'app-arm64.asar.unpacked'));
+        }
+
+        const entryAsar = path.resolve(tmpDir, 'entry-asar');
+        await fs.mkdir(entryAsar);
+        await fs.copy(path.resolve(__dirname, '..', '..', 'entry-asar', 'has-asar.js'), path.resolve(entryAsar, 'index.js'));
+        let pj = JSON.parse((await asar.extractFile(path.resolve(opts.x64AppPath, 'Contents', 'Resources', 'app.asar'), 'package.json')).toString('utf8'));
+        pj.main = 'index.js';
+        await fs.writeJson(path.resolve(entryAsar, 'package.json'), pj);
+        await asar.createPackage(entryAsar, path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'));
+      }
     }
-    pj.main = 'index.js';
-    await fs.writeJson(path.resolve(entryAsar, 'package.json'), pj);
-    await asar.createPackage(entryAsar, path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'));
 
     for (const snapshotsFile of arm64Files.filter(f => f.type === AppFileType.SNAPSHOT)) {
       await fs.copy(path.resolve(opts.arm64AppPath, snapshotsFile.relativePath), path.resolve(tmpApp, snapshotsFile.relativePath));
