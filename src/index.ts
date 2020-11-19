@@ -7,6 +7,7 @@ import * as dircompare from 'dir-compare';
 import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
 import { AsarMode, detectAsarMode } from './asar-utils';
 import { sha } from './sha';
+import { d } from './debug';
 
 type MakeUniversalOpts = {
   /**
@@ -33,6 +34,8 @@ const dupedFiles = (files: AppFile[]) =>
   files.filter((f) => f.type !== AppFileType.SNAPSHOT && f.type !== AppFileType.APP_CODE);
 
 export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> => {
+  d('making a universal app with options', opts);
+
   if (process.platform !== 'darwin')
     throw new Error('@electron/universal is only supported on darwin platforms');
   if (!opts.x64AppPath || !path.isAbsolute(opts.x64AppPath))
@@ -43,17 +46,21 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
     throw new Error('Expected opts.outAppPath to be an absolute path but it was not');
 
   if (await fs.pathExists(opts.outAppPath)) {
+    d('output path exists already');
     if (!opts.force) {
       throw new Error(
         `The out path "${opts.outAppPath}" already exists and force is not set to true`,
       );
     } else {
+      d('overwriting existing application because force == true');
       await fs.remove(opts.outAppPath);
     }
   }
 
   const x64AsarMode = await detectAsarMode(opts.x64AppPath);
   const arm64AsarMode = await detectAsarMode(opts.arm64AppPath);
+  d('detected x64AsarMode =', x64AsarMode);
+  d('detected arm64AsarMode =', arm64AsarMode);
 
   if (x64AsarMode !== arm64AsarMode)
     throw new Error(
@@ -61,8 +68,10 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
     );
 
   const tmpDir = await fs.mkdtemp(path.resolve(os.tmpdir(), 'electron-universal-'));
+  d('building universal app in', tmpDir);
 
   try {
+    d('copying x64 app as starter template');
     const tmpApp = path.resolve(tmpDir, 'Tmp.app');
     await spawn('cp', ['-R', opts.x64AppPath, tmpApp]);
 
@@ -80,6 +89,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         uniqueToArm64.push(file.relativePath);
     }
     if (uniqueToX64.length !== 0 || uniqueToArm64.length !== 0) {
+      d('some files were not in both builds, aborting');
       console.error({
         uniqueToX64,
         uniqueToArm64,
@@ -93,7 +103,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       const x64Sha = await sha(path.resolve(opts.x64AppPath, file.relativePath));
       const arm64Sha = await sha(path.resolve(opts.arm64AppPath, file.relativePath));
       if (x64Sha !== arm64Sha) {
-        console.error(`${x64Sha} !== ${arm64Sha}`);
+        d('SHA for file', file.relativePath, `does not match across builds ${x64Sha}!=${arm64Sha}`);
         throw new Error(
           `Expected all non-binary files to have identical SHAs when creating a universal build but "${file.relativePath}" did not`,
         );
@@ -101,23 +111,38 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
     }
 
     for (const machOFile of x64Files.filter((f) => f.type === AppFileType.MACHO)) {
+      const first = await fs.realpath(path.resolve(tmpApp, machOFile.relativePath));
+      const second = await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath));
+
+      d('joining two MachO files with lipo', {
+        first,
+        second,
+      });
       await spawn('lipo', [
-        await fs.realpath(path.resolve(tmpApp, machOFile.relativePath)),
-        await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath)),
+        first,
+        second,
         '-create',
         '-output',
         await fs.realpath(path.resolve(tmpApp, machOFile.relativePath)),
       ]);
     }
 
+    /**
+     * If we don't have an ASAR we need to check if the two "app" folders are identical, if
+     * they are then we can just leave one there and call it a day.  If the app folders for x64
+     * and arm64 are different though we need to rename each folder and create a new fake "app"
+     * entrypoint to dynamically load the correct app folder
+     */
     if (x64AsarMode === AsarMode.NO_ASAR) {
-      const comparison = dircompare.compareSync(
+      d('checking if the x64 and arm64 app folders are identical');
+      const comparison = await dircompare.compare(
         path.resolve(tmpApp, 'Contents', 'Resources', 'app'),
         path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app'),
         { compareSize: true, compareContent: true },
       );
 
       if (!comparison.same) {
+        d('x64 and arm64 app folders are different, creating dynamic entry ASAR');
         await fs.move(
           path.resolve(tmpApp, 'Contents', 'Resources', 'app'),
           path.resolve(tmpApp, 'Contents', 'Resources', 'app-x64'),
@@ -142,16 +167,28 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
           entryAsar,
           path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
         );
+      } else {
+        d('x64 and arm64 app folders are the same');
       }
     }
 
+    /**
+     * If we have an ASAR we just need to check if the two "app.asar" files have the same hash,
+     * if they are, same as above, we can leave one there and call it a day.  If they're different
+     * we have to make a dynamic entrypoint.  There is an assumption made here that every file in
+     * app.asar.unpacked is a native node module.  This assumption _may_ not be true so we should
+     * look at codifying that assumption as actual logic.
+     */
+    // FIXME: Codify the assumption that app.asar.unpacked only contains native modules
     if (x64AsarMode === AsarMode.HAS_ASAR) {
+      d('checking if the x64 and arm64 asars are identical');
       const x64AsarSha = await sha(path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'));
       const arm64AsarSha = await sha(
         path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar'),
       );
 
       if (x64AsarSha !== arm64AsarSha) {
+        d('x64 and arm64 asars are different');
         await fs.move(
           path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
           path.resolve(tmpApp, 'Contents', 'Resources', 'app-x64.asar'),
@@ -201,16 +238,20 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
           entryAsar,
           path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
         );
+      } else {
+        d('x64 and arm64 asars are the same');
       }
     }
 
     for (const snapshotsFile of arm64Files.filter((f) => f.type === AppFileType.SNAPSHOT)) {
+      d('copying snapshot file', snapshotsFile.relativePath, 'to target application');
       await fs.copy(
         path.resolve(opts.arm64AppPath, snapshotsFile.relativePath),
         path.resolve(tmpApp, snapshotsFile.relativePath),
       );
     }
 
+    d('moving final universal app to target destination');
     await spawn('mv', [tmpApp, opts.outAppPath]);
   } catch (err) {
     throw err;
