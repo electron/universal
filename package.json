@@ -15,6 +15,7 @@
   },
   "files": [
     "dist/*",
+    "entry-asar/*",
     "README.md"
   ],
   "author": "Samuel Attard",
