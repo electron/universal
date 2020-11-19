@@ -78,7 +78,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
     const uniqueToX64: string[] = [];
     const uniqueToArm64: string[] = [];
     const x64Files = await getAllAppFiles(await fs.realpath(tmpApp));
-    const arm64Files = await getAllAppFiles(opts.arm64AppPath);
+    const arm64Files = await getAllAppFiles(await fs.realpath(opts.arm64AppPath));
 
     for (const file of dupedFiles(x64Files)) {
       if (!arm64Files.some((f) => f.relativePath === file.relativePath))
@@ -252,6 +252,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
     }
 
     d('moving final universal app to target destination');
+    await fs.mkdirp(path.dirname(opts.outAppPath));
     await spawn('mv', [tmpApp, opts.outAppPath]);
   } catch (err) {
     throw err;
