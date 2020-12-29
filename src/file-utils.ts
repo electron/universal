@@ -1,4 +1,4 @@
-import { spawn } from '@malept/cross-spawn-promise';
+import { spawn, ExitCodeError } from '@malept/cross-spawn-promise';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -34,7 +34,16 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
     if (info.isFile()) {
       let fileType = AppFileType.PLAIN;
 
-      const fileOutput = await spawn('file', ['--brief', '--no-pad', p]);
+      var fileOutput = '';
+      try {
+        fileOutput = await spawn('file', ['--brief', '--no-pad', p]);
+      } catch (e) {
+        if (e instanceof ExitCodeError) {
+          /* silently accept error codes from "file" */
+        } else {
+          throw e;
+        }
+      }
       if (p.includes('app.asar')) {
         fileType = AppFileType.APP_CODE;
       } else if (fileOutput.startsWith(MACHO_PREFIX)) {
