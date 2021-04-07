@@ -34,7 +34,7 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
     if (info.isFile()) {
       let fileType = AppFileType.PLAIN;
 
-      const fileOutput = await spawn('file', ['--brief', '--no-pad', p]);
+      const fileOutput = await spawn('file', ['--brief', '--no-pad', p]).catch(() => '');
       if (p.includes('app.asar')) {
         fileType = AppFileType.APP_CODE;
       } else if (fileOutput.startsWith(MACHO_PREFIX)) {
