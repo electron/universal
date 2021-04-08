@@ -13,7 +13,8 @@
     ],
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "declaration": true
+    "declaration": true,
+    "newLine": "lf"
   },
   "include": [
     "src"
