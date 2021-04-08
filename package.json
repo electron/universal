@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json",
     "lint": "prettier --check \"src/**/*.ts\"",
-    "prepublishOnly": "npm run build",
+    "prepack": "npm run build",
     "test": "exit 0"
   },
   "devDependencies": {
