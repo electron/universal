@@ -114,6 +114,17 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       const first = await fs.realpath(path.resolve(tmpApp, machOFile.relativePath));
       const second = await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath));
 
+      const x64Sha = await sha(path.resolve(opts.x64AppPath, machOFile.relativePath));
+      const arm64Sha = await sha(path.resolve(opts.arm64AppPath, machOFile.relativePath));
+      if (x64Sha === arm64Sha) {
+        d(
+          'SHA for Mach-O file',
+          machOFile.relativePath,
+          `matches across builds ${x64Sha}===${arm64Sha}, skipping lipo`,
+        );
+        continue;
+      }
+
       d('joining two MachO files with lipo', {
         first,
         second,
