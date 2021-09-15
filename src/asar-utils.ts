@@ -1,3 +1,5 @@
+import * as asar from 'asar';
+import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { d } from './debug';
@@ -18,4 +20,14 @@ export const detectAsarMode = async (appPath: string) => {
 
   d('determined has asar');
   return AsarMode.HAS_ASAR;
+};
+
+export const generateAsarIntegrity = (asarPath: string) => {
+  return {
+    algorithm: 'SHA256' as const,
+    hash: crypto
+      .createHash('SHA256')
+      .update(asar.getRawHeader(asarPath).headerString)
+      .digest('hex'),
+  };
 };

@@ -1,11 +1,14 @@
 import { spawn } from '@malept/cross-spawn-promise';
 import * as asar from 'asar';
+import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
+import * as plist from 'plist';
 import * as dircompare from 'dir-compare';
+
 import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
-import { AsarMode, detectAsarMode } from './asar-utils';
+import { AsarMode, detectAsarMode, generateAsarIntegrity } from './asar-utils';
 import { sha } from './sha';
 import { d } from './debug';
 
@@ -172,6 +175,9 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       }
     }
 
+    const generatedIntegrity: Record<string, { algorithm: 'SHA256'; hash: string }> = {};
+    let didSplitAsar = false;
+
     /**
      * If we have an ASAR we just need to check if the two "app.asar" files have the same hash,
      * if they are, same as above, we can leave one there and call it a day.  If they're different
@@ -188,11 +194,10 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       );
 
       if (x64AsarSha !== arm64AsarSha) {
+        didSplitAsar = true;
         d('x64 and arm64 asars are different');
-        await fs.move(
-          path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
-          path.resolve(tmpApp, 'Contents', 'Resources', 'app-x64.asar'),
-        );
+        const x64AsarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app-x64.asar');
+        await fs.move(path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'), x64AsarPath);
         const x64Unpacked = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar.unpacked');
         if (await fs.pathExists(x64Unpacked)) {
           await fs.move(
@@ -201,9 +206,10 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
           );
         }
 
+        const arm64AsarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app-arm64.asar');
         await fs.copy(
           path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar'),
-          path.resolve(tmpApp, 'Contents', 'Resources', 'app-arm64.asar'),
+          arm64AsarPath,
         );
         const arm64Unpacked = path.resolve(
           opts.arm64AppPath,
@@ -234,13 +240,40 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         );
         pj.main = 'index.js';
         await fs.writeJson(path.resolve(entryAsar, 'package.json'), pj);
-        await asar.createPackage(
-          entryAsar,
-          path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
-        );
+        const asarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar');
+        await asar.createPackage(entryAsar, asarPath);
+
+        generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(asarPath);
+        generatedIntegrity['Resources/app-x64.asar'] = generateAsarIntegrity(x64AsarPath);
+        generatedIntegrity['Resources/app-arm64.asar'] = generateAsarIntegrity(arm64AsarPath);
       } else {
         d('x64 and arm64 asars are the same');
+        generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(
+          path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
+        );
       }
+    }
+
+    const plistFiles = x64Files.filter((f) => f.type === AppFileType.INFO_PLIST);
+    for (const plistFile of plistFiles) {
+      const x64PlistPath = path.resolve(opts.x64AppPath, plistFile.relativePath);
+      const arm64PlistPath = path.resolve(opts.arm64AppPath, plistFile.relativePath);
+
+      const { ElectronAsarIntegrity: x64Integrity, ...x64Plist } = plist.parse(
+        await fs.readFile(x64PlistPath, 'utf8'),
+      ) as any;
+      const { ElectronAsarIntegrity: arm64Integrity, ...arm64Plist } = plist.parse(
+        await fs.readFile(arm64PlistPath, 'utf8'),
+      ) as any;
+      if (JSON.stringify(x64Plist) !== JSON.stringify(arm64Plist)) {
+        throw new Error(
+          `Expected all Info.plist files to be identical when ignoring integrity when creating a universal build but "${plistFile.relativePath}" was not`,
+        );
+      }
+
+      const mergedPlist = { ...x64Plist, ElectronAsarIntegrity: generatedIntegrity };
+
+      await fs.writeFile(path.resolve(tmpApp, plistFile.relativePath), plist.build(mergedPlist));
     }
 
     for (const snapshotsFile of arm64Files.filter((f) => f.type === AppFileType.SNAPSHOT)) {

@@ -7,6 +7,7 @@ const MACHO_PREFIX = 'Mach-O ';
 export enum AppFileType {
   MACHO,
   PLAIN,
+  INFO_PLIST,
   SNAPSHOT,
   APP_CODE,
 }
@@ -50,6 +51,8 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
         fileType = AppFileType.MACHO;
       } else if (p.endsWith('.bin')) {
         fileType = AppFileType.SNAPSHOT;
+      } else if (path.basename(p) === 'Info.plist') {
+        fileType = AppFileType.INFO_PLIST;
       }
 
       files.push({
