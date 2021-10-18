@@ -10,6 +10,10 @@
     "apple silicon",
     "universal"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/electron/universal.git"
+  },
   "engines": {
     "node": ">=8.6"
   },
