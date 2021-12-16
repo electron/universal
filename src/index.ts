@@ -8,7 +8,7 @@ import * as plist from 'plist';
 import * as dircompare from 'dir-compare';
 
 import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
-import { AsarMode, detectAsarMode, generateAsarIntegrity } from './asar-utils';
+import { AsarMode, detectAsarMode, generateAsarIntegrity, fuseASARs } from './asar-utils';
 import { sha } from './sha';
 import { d } from './debug';
 
@@ -31,6 +31,14 @@ type MakeUniversalOpts = {
    * Forcefully overwrite any existing files that are in the way of generating the universal application
    */
   force: boolean;
+  /**
+   * Fuse x64 and arm64 ASARs into one.
+   */
+  fuseASARs?: boolean;
+  /**
+   * Minimatch pattern of paths that are allowed to be unique in ASARs.
+   */
+  fuseASARsAllowList?: string;
 };
 
 const dupedFiles = (files: AppFile[]) =>
@@ -186,7 +194,18 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
      * look at codifying that assumption as actual logic.
      */
     // FIXME: Codify the assumption that app.asar.unpacked only contains native modules
-    if (x64AsarMode === AsarMode.HAS_ASAR) {
+    if (x64AsarMode === AsarMode.HAS_ASAR && opts.fuseASARs) {
+      d('fusing x64 and arm64 asars');
+      const output = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar');
+      await fuseASARs({
+        x64: path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
+        arm64: path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar'),
+        output,
+        uniqueAllowList: opts.fuseASARsAllowList,
+      });
+
+      generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(output);
+    } else if (x64AsarMode === AsarMode.HAS_ASAR) {
       d('checking if the x64 and arm64 asars are identical');
       const x64AsarSha = await sha(path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'));
       const arm64AsarSha = await sha(
