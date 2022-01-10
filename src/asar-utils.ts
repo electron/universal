@@ -19,7 +19,7 @@ export type MergeASARsOptions = {
   arm64AsarPath: string;
   outputAsarPath: string;
 
-  uniqueAllowList?: string;
+  singleArchFiles?: string;
 };
 
 // See: https://github.com/apple-opensource-mirror/llvmCore/blob/0c60489d96c87140db9a6a14c6e82b15f5e5d252/include/llvm/Object/MachOFormat.h#L108-L112
@@ -68,7 +68,7 @@ function isDirectory(a: string, file: string): boolean {
   return Boolean('files' in asar.statFile(a, file));
 }
 
-function checkUnique(archive: string, file: string, allowList?: string): void {
+function checkSingleArch(archive: string, file: string, allowList?: string): void {
   if (allowList === undefined || !minimatch(file, allowList, { matchBase: true })) {
     throw new Error(
       `Detected unique file "${file}" in "${archive}" not covered by ` +
@@ -81,7 +81,7 @@ export const mergeASARs = async ({
   x64AsarPath,
   arm64AsarPath,
   outputAsarPath,
-  uniqueAllowList,
+  singleArchFiles,
 }: MergeASARsOptions): Promise<void> => {
   d(`merging ${x64AsarPath} and ${arm64AsarPath}`);
 
@@ -118,13 +118,13 @@ export const mergeASARs = async ({
 
   for (const file of x64Files) {
     if (!arm64Files.has(file)) {
-      checkUnique(x64AsarPath, file, uniqueAllowList);
+      checkSingleArch(x64AsarPath, file, singleArchFiles);
     }
   }
   const arm64Unique = [];
   for (const file of arm64Files) {
     if (!x64Files.has(file)) {
-      checkUnique(arm64AsarPath, file, uniqueAllowList);
+      checkSingleArch(arm64AsarPath, file, singleArchFiles);
       arm64Unique.push(file);
     }
   }

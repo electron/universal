@@ -36,9 +36,9 @@ type MakeUniversalOpts = {
    */
   mergeASARs?: boolean;
   /**
-   * Minimatch pattern of paths that are allowed to be unique in ASARs.
+   * Minimatch pattern of paths that are allowed to be present in one of the ASAR files, but not in the other.
    */
-  mergeASARsAllowList?: string;
+  singleArchFiles?: string;
 };
 
 const dupedFiles = (files: AppFile[]) =>
@@ -201,7 +201,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         x64AsarPath: path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
         arm64AsarPath: path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar'),
         outputAsarPath: output,
-        uniqueAllowList: opts.mergeASARsAllowList,
+        singleArchFiles: opts.singleArchFiles,
       });
 
       generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(output);
