@@ -7,17 +7,18 @@ import * as minimatch from 'minimatch';
 import * as os from 'os';
 import { d } from './debug';
 
+const LIPO = 'lipo';
+
 export enum AsarMode {
   NO_ASAR,
   HAS_ASAR,
 }
 
-export type FuseASARsOptions = {
-  x64: string;
-  arm64: string;
-  output: string;
+export type MergeASARsOptions = {
+  x64AsarPath: string;
+  arm64AsarPath: string;
+  outputAsarPath: string;
 
-  lipo?: string;
   uniqueAllowList?: string;
 };
 
@@ -76,17 +77,16 @@ function checkUnique(archive: string, file: string, allowList?: string): void {
   }
 }
 
-export const fuseASARs = async ({
-  x64,
-  arm64,
-  output,
-  lipo = 'lipo',
+export const mergeASARs = async ({
+  x64AsarPath,
+  arm64AsarPath,
+  outputAsarPath,
   uniqueAllowList,
-}: FuseASARsOptions): Promise<void> => {
-  d(`fusing ${x64} and ${arm64}`);
+}: MergeASARsOptions): Promise<void> => {
+  d(`merging ${x64AsarPath} and ${arm64AsarPath}`);
 
-  const x64Files = new Set(asar.listPackage(x64).map(toRelativePath));
-  const arm64Files = new Set(asar.listPackage(arm64).map(toRelativePath));
+  const x64Files = new Set(asar.listPackage(x64AsarPath).map(toRelativePath));
+  const arm64Files = new Set(asar.listPackage(arm64AsarPath).map(toRelativePath));
 
   //
   // Build set of unpacked directories and files
@@ -109,8 +109,8 @@ export const fuseASARs = async ({
     }
   }
 
-  buildUnpacked(x64, x64Files);
-  buildUnpacked(arm64, arm64Files);
+  buildUnpacked(x64AsarPath, x64Files);
+  buildUnpacked(arm64AsarPath, arm64Files);
 
   //
   // Build list of files/directories unique to each asar
@@ -118,13 +118,13 @@ export const fuseASARs = async ({
 
   for (const file of x64Files) {
     if (!arm64Files.has(file)) {
-      checkUnique(x64, file, uniqueAllowList);
+      checkUnique(x64AsarPath, file, uniqueAllowList);
     }
   }
   const arm64Unique = [];
   for (const file of arm64Files) {
     if (!x64Files.has(file)) {
-      checkUnique(arm64, file, uniqueAllowList);
+      checkUnique(arm64AsarPath, file, uniqueAllowList);
       arm64Unique.push(file);
     }
   }
@@ -140,12 +140,12 @@ export const fuseASARs = async ({
     }
 
     // Skip directories
-    if (isDirectory(x64, file)) {
+    if (isDirectory(x64AsarPath, file)) {
       continue;
     }
 
-    const x64Content = asar.extractFile(x64, file);
-    const arm64Content = asar.extractFile(arm64, file);
+    const x64Content = asar.extractFile(x64AsarPath, file);
+    const arm64Content = asar.extractFile(arm64AsarPath, file);
 
     if (x64Content.compare(arm64Content) === 0) {
       continue;
@@ -166,17 +166,17 @@ export const fuseASARs = async ({
   const arm64Dir = await fs.mkdtemp(path.join(os.tmpdir(), 'arm64-'));
 
   try {
-    d(`extracting ${x64} to ${x64Dir}`);
-    asar.extractAll(x64, x64Dir);
+    d(`extracting ${x64AsarPath} to ${x64Dir}`);
+    asar.extractAll(x64AsarPath, x64Dir);
 
-    d(`extracting ${arm64} to ${arm64Dir}`);
-    asar.extractAll(arm64, arm64Dir);
+    d(`extracting ${arm64AsarPath} to ${arm64Dir}`);
+    asar.extractAll(arm64AsarPath, arm64Dir);
 
     for (const file of arm64Unique) {
       const source = path.resolve(arm64Dir, file);
       const destination = path.resolve(x64Dir, file);
 
-      if (isDirectory(arm64, file)) {
+      if (isDirectory(arm64AsarPath, file)) {
         d(`creating unique directory: ${file}`);
         await fs.mkdirp(destination);
         continue;
@@ -191,19 +191,19 @@ export const fuseASARs = async ({
       const source = await fs.realpath(path.resolve(arm64Dir, binding));
       const destination = await fs.realpath(path.resolve(x64Dir, binding));
 
-      d(`fusing binding: ${binding}`);
-      execFileSync(lipo, [source, destination, '-create', '-output', destination]);
+      d(`merging binding: ${binding}`);
+      execFileSync(LIPO, [source, destination, '-create', '-output', destination]);
     }
 
-    d(`creating archive at ${output}`);
+    d(`creating archive at ${outputAsarPath}`);
 
     const resolvedUnpack = Array.from(unpackedFiles).map((file) => path.join(x64Dir, file));
 
-    await asar.createPackageWithOptions(x64Dir, output, {
+    await asar.createPackageWithOptions(x64Dir, outputAsarPath, {
       unpack: `{${resolvedUnpack.join(',')}}`,
     });
 
-    d('done fusing');
+    d('done merging');
   } finally {
     await Promise.all([fs.remove(x64Dir), fs.remove(arm64Dir)]);
   }
