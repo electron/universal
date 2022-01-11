@@ -31,10 +31,6 @@ const MACHO_MAGIC = new Set([
   // 64-bit Mach-O
   0xfeedfacf,
   0xcffaedfe,
-
-  // Universal
-  0xcafebabe,
-  0xbebafeca,
 ]);
 
 export const detectAsarMode = async (appPath: string) => {
