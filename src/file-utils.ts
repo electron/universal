@@ -3,6 +3,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 const MACHO_PREFIX = 'Mach-O ';
+const ARCHIVE_LIB_PREFIX = 'current ar archive';
 
 export enum AppFileType {
   MACHO,
@@ -10,6 +11,7 @@ export enum AppFileType {
   INFO_PLIST,
   SNAPSHOT,
   APP_CODE,
+  ARCHIVE_LIB,
 }
 
 export type AppFile = {
@@ -49,6 +51,8 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
         fileType = AppFileType.APP_CODE;
       } else if (fileOutput.startsWith(MACHO_PREFIX)) {
         fileType = AppFileType.MACHO;
+      } else if (fileOutput.startsWith(ARCHIVE_LIB_PREFIX)) {
+        fileType = AppFileType.ARCHIVE_LIB;
       } else if (p.endsWith('.bin')) {
         fileType = AppFileType.SNAPSHOT;
       } else if (path.basename(p) === 'Info.plist') {
