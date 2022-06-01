@@ -2,6 +2,7 @@ import { spawn } from '@malept/cross-spawn-promise';
 import * as asar from 'asar';
 import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
+import * as minimatch from 'minimatch';
 import * as os from 'os';
 import * as path from 'path';
 import * as plist from 'plist';
@@ -39,6 +40,10 @@ type MakeUniversalOpts = {
    * Minimatch pattern of paths that are allowed to be present in one of the ASAR files, but not in the other.
    */
   singleArchFiles?: string;
+  /**
+   * Minimatch pattern of binaries that are expected to be the same x64 binary in both of the ASAR files.
+   */
+  x64ArchFiles?: string;
 };
 
 const dupedFiles = (files: AppFile[]) =>
@@ -129,6 +134,27 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
     for (const machOFile of x64Files.filter((f) => f.type === AppFileType.MACHO)) {
       const first = await fs.realpath(path.resolve(tmpApp, machOFile.relativePath));
       const second = await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath));
+
+      const x64Sha = await sha(path.resolve(opts.x64AppPath, machOFile.relativePath));
+      const arm64Sha = await sha(path.resolve(opts.arm64AppPath, machOFile.relativePath));
+      if (x64Sha === arm64Sha) {
+        if (
+          opts.x64ArchFiles === undefined ||
+          !minimatch(machOFile.relativePath, opts.x64ArchFiles, { matchBase: true })
+        ) {
+          throw new Error(
+            `Detected file "${machOFile.relativePath}" that's the same in both x64 and arm64 builds and not covered by the ` +
+              `x64ArchFiles rule: "${opts.x64ArchFiles}"`,
+          );
+        }
+
+        d(
+          'SHA for Mach-O file',
+          machOFile.relativePath,
+          `matches across builds ${x64Sha}===${arm64Sha}, skipping lipo`,
+        );
+        continue;
+      }
 
       d('joining two MachO files with lipo', {
         first,
