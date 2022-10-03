@@ -13,7 +13,7 @@ import { AsarMode, detectAsarMode, generateAsarIntegrity, mergeASARs } from './a
 import { sha } from './sha';
 import { d } from './debug';
 
-type MakeUniversalOpts = {
+export type MakeUniversalOpts = {
   /**
    * Absolute file system path to the x64 version of your application.  E.g. /Foo/bar/MyApp_x64.app
    */
