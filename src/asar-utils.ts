@@ -195,8 +195,15 @@ export const mergeASARs = async ({
 
     const resolvedUnpack = Array.from(unpackedFiles).map((file) => path.join(x64Dir, file));
 
+    let unpack: string | undefined;
+    if (resolvedUnpack.length > 1) {
+      unpack = `{${resolvedUnpack.join(',')}}`;
+    } else if (resolvedUnpack.length === 1) {
+      unpack = resolvedUnpack[0];
+    }
+
     await asar.createPackageWithOptions(x64Dir, outputAsarPath, {
-      unpack: `{${resolvedUnpack.join(',')}}`,
+      unpack,
     });
 
     d('done merging');
