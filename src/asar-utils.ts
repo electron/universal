@@ -1,4 +1,4 @@
-import * as asar from 'asar';
+import * as asar from '@electron/asar';
 import { execFileSync } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs-extra';

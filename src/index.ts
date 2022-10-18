@@ -1,5 +1,5 @@
 import { spawn } from '@malept/cross-spawn-promise';
-import * as asar from 'asar';
+import * as asar from '@electron/asar';
 import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as minimatch from 'minimatch';
