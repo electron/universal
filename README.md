@@ -2,7 +2,7 @@
 
 > Create universal macOS Electron applications
 
-[![CircleCI](https://circleci.com/gh/electron/universal/tree/master.svg?style=svg)](https://circleci.com/gh/electron/universal)
+[![CircleCI](https://circleci.com/gh/electron/universal/tree/main.svg?style=svg)](https://circleci.com/gh/electron/universal)
 
 
 ## Usage
