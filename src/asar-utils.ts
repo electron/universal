@@ -25,12 +25,10 @@ export type MergeASARsOptions = {
 // See: https://github.com/apple-opensource-mirror/llvmCore/blob/0c60489d96c87140db9a6a14c6e82b15f5e5d252/include/llvm/Object/MachOFormat.h#L108-L112
 const MACHO_MAGIC = new Set([
   // 32-bit Mach-O
-  0xfeedface,
-  0xcefaedfe,
+  0xfeedface, 0xcefaedfe,
 
   // 64-bit Mach-O
-  0xfeedfacf,
-  0xcffaedfe,
+  0xfeedfacf, 0xcffaedfe,
 ]);
 
 export const detectAsarMode = async (appPath: string) => {
