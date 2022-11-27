@@ -31,7 +31,7 @@ jobs:
       - *step-restore-cache
       - run: yarn --frozen-lockfile
       - run: npx @continuous-auth/circleci-oidc-github-auth@1.0.5
-      - run: npx semantic-release
+      - run: npx semantic-release@17.4.5
 workflows:
   version: 2
   test_and_release:
