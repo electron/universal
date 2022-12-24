@@ -1,13 +1,10 @@
-step-restore-cache: &step-restore-cache
-  restore_cache:
-    keys:
-      - v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
-      - v1-dependencies-{{ arch }}
-
 steps-test: &steps-test
   steps:
     - checkout
-    - *step-restore-cache
+    - restore_cache:
+        keys:
+          - v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
+          - v1-dependencies-{{ arch }}
     - run: yarn --frozen-lockfile
     - save_cache:
         paths:
@@ -17,27 +14,22 @@ steps-test: &steps-test
     - run: yarn test
 
 version: 2.1
+
+orbs:
+  cfa: continuousauth/npm@1.0.2
+
 jobs:
   test:
     macos:
       xcode: "13.4.1"
     <<: *steps-test
 
-  release:
-    docker:
-      - image: circleci/node:14.15
-    steps:
-      - checkout
-      - *step-restore-cache
-      - run: yarn --frozen-lockfile
-      - run: npx @continuous-auth/circleci-oidc-github-auth@1.0.5
-      - run: npx semantic-release@17.4.5
 workflows:
   version: 2
   test_and_release:
     jobs:
       - test
-      - release:
+      - cfa/release:
           requires:
             - test
           filters:
