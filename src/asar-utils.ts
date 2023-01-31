@@ -157,7 +157,7 @@ export const mergeASARs = async ({
       continue;
     }
 
-    if (!MACHO_MAGIC.has(x64Content.readUInt32BE(0))) {
+    if (!MACHO_MAGIC.has(x64Content.readUInt32LE(0))) {
       throw new Error(`Can't reconcile two non-macho files ${file}`);
     }
 
