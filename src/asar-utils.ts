@@ -33,6 +33,12 @@ const MACHO_MAGIC = new Set([
   0xcffaedfe,
 ]);
 
+const MACHO_UNIVERSAL_MAGIC = new Set([
+    // universal
+    0xcafebabe,
+    0xbebafeca,
+]);
+
 export const detectAsarMode = async (appPath: string) => {
   d('checking asar mode of', appPath);
   const asarPath = path.resolve(appPath, 'Contents', 'Resources', 'app.asar');
@@ -147,7 +153,11 @@ export const mergeASARs = async ({
       continue;
     }
 
-    if (!MACHO_MAGIC.has(x64Content.readUInt32LE(0))) {
+    if (MACHO_UNIVERSAL_MAGIC.has(x64Content.readUInt32LE(0)) && MACHO_UNIVERSAL_MAGIC.has(arm64Content.readUInt32LE(0))) {
+      continue;
+    }
+
+    if (!MACHO_MAGIC.has(x64Content.readUInt32BE(0))) {
       throw new Error(`Can't reconcile two non-macho files ${file}`);
     }
 
@@ -192,7 +202,6 @@ export const mergeASARs = async ({
     }
 
     d(`creating archive at ${outputAsarPath}`);
-
     const resolvedUnpack = Array.from(unpackedFiles).map((file) => path.join(x64Dir, file));
 
     let unpack: string | undefined;
