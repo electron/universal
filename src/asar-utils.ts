@@ -202,6 +202,7 @@ export const mergeASARs = async ({
     }
 
     d(`creating archive at ${outputAsarPath}`);
+
     const resolvedUnpack = Array.from(unpackedFiles).map((file) => path.join(x64Dir, file));
 
     let unpack: string | undefined;
