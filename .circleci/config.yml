@@ -22,6 +22,7 @@ jobs:
   test:
     macos:
       xcode: "13.4.1"
+    resource_class: macos.x86.medium.gen2
     <<: *steps-test
 
 workflows:
