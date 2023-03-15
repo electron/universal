@@ -184,10 +184,10 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         { compareSize: true, compareContent: true },
       );
       const differences = comparison.diffSet
-		    .filter(difference => difference.state !== "equal")
+        .filter(difference => difference.state !== "equal")
       d(`Found ${differences.length} difference(s) between the x64 and arm64 folders`);
       const nonMergedDifferences = differences
-		    .filter(difference => !knownMergedMachOFiles.has(path.join('Contents', 'Resources', 'app', difference.relativePath, difference.name1)))
+        .filter(difference => !knownMergedMachOFiles.has(path.join('Contents', 'Resources', 'app', difference.relativePath, difference.name1)))
       d(`After discluding MachO files merged with lipo ${nonMergedDifferences.length} remain.`);
 
       if (nonMergedDifferences.length > 0) {
