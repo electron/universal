@@ -33,6 +33,12 @@ const MACHO_MAGIC = new Set([
   0xcffaedfe,
 ]);
 
+const MACHO_UNIVERSAL_MAGIC = new Set([
+    // universal
+    0xcafebabe,
+    0xbebafeca,
+]);
+
 export const detectAsarMode = async (appPath: string) => {
   d('checking asar mode of', appPath);
   const asarPath = path.resolve(appPath, 'Contents', 'Resources', 'app.asar');
@@ -144,6 +150,10 @@ export const mergeASARs = async ({
     const arm64Content = asar.extractFile(arm64AsarPath, file);
 
     if (x64Content.compare(arm64Content) === 0) {
+      continue;
+    }
+
+    if (MACHO_UNIVERSAL_MAGIC.has(x64Content.readUInt32LE(0)) && MACHO_UNIVERSAL_MAGIC.has(arm64Content.readUInt32LE(0))) {
       continue;
     }
 
