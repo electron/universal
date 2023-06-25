@@ -44,6 +44,10 @@ export type MakeUniversalOpts = {
    * Minimatch pattern of binaries that are expected to be the same x64 binary in both of the ASAR files.
    */
   x64ArchFiles?: string;
+  /**
+   * Minimatch pattern of paths that should not receive an injected ElectronAsarIntegrity value
+   */
+  infoPlistsToIgnore?: string;
 };
 
 const dupedFiles = (files: AppFile[]) =>
@@ -321,7 +325,12 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         );
       }
 
-      const mergedPlist = { ...x64Plist, ElectronAsarIntegrity: generatedIntegrity };
+      const injectAsarIntegrity =
+        !opts.infoPlistsToIgnore ||
+        minimatch(plistFile.relativePath, opts.infoPlistsToIgnore, { matchBase: true });
+      const mergedPlist = injectAsarIntegrity
+        ? { ...x64Plist, ElectronAsarIntegrity: generatedIntegrity }
+        : { ...x64Plist };
 
       await fs.writeFile(path.resolve(tmpApp, plistFile.relativePath), plist.build(mergedPlist));
     }
