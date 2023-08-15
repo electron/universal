@@ -23,6 +23,9 @@ workflows:
                 - 18.17.0
                 - 16.20.1
                 - 14.21.3
+                - 12.22.12
+                - 10.24.1
+                - 8.17.0
       - cfa/release:
           requires:
             - test
