@@ -1,35 +1,28 @@
-steps-test: &steps-test
-  steps:
-    - checkout
-    - restore_cache:
-        keys:
-          - v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
-          - v1-dependencies-{{ arch }}
-    - run: yarn --frozen-lockfile
-    - save_cache:
-        paths:
-          - node_modules
-        key: v1-dependencies-{{ arch }}-{{ checksum "yarn.lock" }}
-    - run: yarn build
-    - run: yarn test
-
 version: 2.1
 
 orbs:
   cfa: continuousauth/npm@1.0.2
-
-jobs:
-  test:
-    macos:
-      xcode: "13.4.1"
-    resource_class: macos.x86.medium.gen2
-    <<: *steps-test
+  node: electronjs/node@1.1.0
 
 workflows:
-  version: 2
   test_and_release:
+    # Run the test jobs first, then the release only when all the test jobs are successful
     jobs:
-      - test
+      - node/test:
+          executor: node/macos
+          name: test-mac-<< matrix.node-version >>
+          test-steps:
+            - run: yarn build
+            - run: yarn test
+          use-test-steps: true
+          matrix:
+            alias: test
+            parameters:
+              node-version:
+                - 20.5.0
+                - 18.17.0
+                - 16.20.1
+                - 14.21.3
       - cfa/release:
           requires:
             - test
@@ -38,4 +31,3 @@ workflows:
               only:
                 - main
           context: cfa-release
-
