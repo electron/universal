@@ -26,6 +26,7 @@
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json",
     "lint": "prettier --check \"src/**/*.ts\"",
+    "prettier:write": "prettier --write \"src/**/*.ts\"",
     "prepublishOnly": "npm run build",
     "test": "exit 0",
     "prepare": "husky install"
