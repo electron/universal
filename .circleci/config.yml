@@ -14,6 +14,7 @@ workflows:
           override-ci-command: yarn install --frozen-lockfile --ignore-engines
           test-steps:
             - run: yarn build
+            - run: yarn lint
             - run: yarn test
           use-test-steps: true
           matrix:
