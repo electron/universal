@@ -1,3 +1,5 @@
+const path = require('path')
+
 if (process.arch === 'arm64') {
   setPaths('arm64');
 } else {
@@ -11,8 +13,8 @@ function setPaths(platform) {
   const asarFile = `app-${platform}.asar`
 
   // Maybe we'll handle this in Electron one day
-  if (appPath.includes('app.asar')) {
-    const platformAppPath = appPath.replace(/\.app\.asar$/, asarFile)
+  if (path.basename(appPath) === 'app.asar') {
+    const platformAppPath = path.join(path.dirname(appPath), asarFile)
 
     // This is an undocumented API. It exists.
     app.setAppPath(platformAppPath)

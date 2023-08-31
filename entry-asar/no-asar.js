@@ -11,10 +11,10 @@ function setPaths(platform) {
   const appFolder = `app-${platform}`
 
   // Maybe we'll handle this in Electron one day
-  if (appPath.endsWith('app')) {
-    const platformAppPath = appPath.replace(/app$/, appFolder)
+  if (path.basename(appPath) === 'app') {
+    const platformAppPath = path.join(path.dirname(appPath), appFolder)
 
-    // This is an undocumented API. It exists.
+    // This is an undocumented private API. It exists.
     app.setAppPath(platformAppPath)
   }
 
