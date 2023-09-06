@@ -25,8 +25,8 @@
   "author": "Samuel Attard",
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json",
-    "lint": "prettier --check \"src/**/*.ts\"",
-    "prettier:write": "prettier --write \"src/**/*.ts\"",
+    "lint": "prettier --check \"{src,entry-asar}/**/*.{js,ts}\"",
+    "prettier:write": "prettier --write \"{src,entry-asar}/**/*.{js,ts}\"",
     "prepublishOnly": "npm run build",
     "test": "exit 0",
     "prepare": "husky install"
