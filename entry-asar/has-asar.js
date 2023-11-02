@@ -1,3 +1,4 @@
+const { app } = require('electron');
 const path = require('path');
 
 if (process.arch === 'arm64') {
