@@ -1,10 +1,13 @@
+import { app } from 'electron';
+import path from 'path';
+
 if (process.arch === 'arm64') {
   setPaths('arm64');
 } else {
   setPaths('x64');
 }
 
-function setPaths(platform) {
+function setPaths(platform: string) {
   // This should return the full path, ending in something like
   // Notion.app/Contents/Resources/app
   const appPath = app.getAppPath();

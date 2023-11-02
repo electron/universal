@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "entry-asar",
+  },
+  "include": [
+    "entry-asar"
+  ],
+  "exclude": []
+}
