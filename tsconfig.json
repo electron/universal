@@ -16,6 +16,7 @@
     "declaration": true
   },
   "include": [
-    "src"
+    "src",
+    "entry-asar"
   ]
 }

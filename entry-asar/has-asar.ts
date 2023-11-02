@@ -1,5 +1,5 @@
-const { app } = require('electron');
-const path = require('path');
+import { app } from 'electron';
+import path from 'path';
 
 if (process.arch === 'arm64') {
   setPaths('arm64');
@@ -7,7 +7,7 @@ if (process.arch === 'arm64') {
   setPaths('x64');
 }
 
-function setPaths(platform) {
+function setPaths(platform: string) {
   // This should return the full path, ending in something like
   // Notion.app/Contents/Resources/app.asar
   const appPath = app.getAppPath();
