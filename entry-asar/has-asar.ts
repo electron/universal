@@ -1,5 +1,5 @@
 import { app } from 'electron';
-import * as path from 'path';
+import path from 'path';
 
 if (process.arch === 'arm64') {
   setPaths('arm64');
