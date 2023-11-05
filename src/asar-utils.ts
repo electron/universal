@@ -1,10 +1,10 @@
-import * as asar from '@electron/asar';
+import asar from '@electron/asar';
 import { execFileSync } from 'child_process';
-import * as crypto from 'crypto';
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import * as minimatch from 'minimatch';
-import * as os from 'os';
+import crypto from 'crypto';
+import fs from 'fs-extra';
+import path from 'path';
+import minimatch from 'minimatch';
+import os from 'os';
 import { d } from './debug';
 
 const LIPO = 'lipo';
