@@ -13,6 +13,7 @@ workflows:
           name: test-mac-<< matrix.node-version >>
           override-ci-command: yarn install --frozen-lockfile --ignore-engines
           test-steps:
+            - node/install-rosetta
             - run: yarn build
             - run: yarn lint
             - run: yarn test
