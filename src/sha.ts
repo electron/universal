@@ -1,13 +1,16 @@
 import * as fs from 'fs-extra';
 import * as crypto from 'crypto';
-import { pipeline } from 'stream/promises';
-
 import { d } from './debug';
 
 export const sha = async (filePath: string) => {
   d('hashing', filePath);
   const hash = crypto.createHash('sha256');
   hash.setEncoding('hex');
-  await pipeline(fs.createReadStream(filePath), hash);
+  const fileStream = fs.createReadStream(filePath);
+  fileStream.pipe(hash);
+  await new Promise((resolve, reject) => {
+    fileStream.on('end', () => resolve());
+    fileStream.on('error', (err) => reject(err));
+  });
   return hash.read();
 };
