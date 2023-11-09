@@ -3,3 +3,5 @@ dist
 entry-asar/*.js*
 entry-asar/*.ts
 *.app
+test/fixtures/apps
+coverage
