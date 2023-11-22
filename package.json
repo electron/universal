@@ -33,7 +33,6 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@continuous-auth/semantic-release-npm": "^4.0.0",
     "@electron/get": "^3.0.0",
     "@types/cross-zip": "^4.0.1",
     "@types/debug": "^4.1.10",
