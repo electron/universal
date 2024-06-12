@@ -5,3 +5,5 @@ entry-asar/*.ts
 *.app
 test/fixtures/apps
 coverage
+docs
+.vscode
