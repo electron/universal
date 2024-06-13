@@ -290,10 +290,6 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
 
         const entryAsar = path.resolve(tmpDir, 'entry-asar');
         await fs.mkdir(entryAsar);
-        await fs.copy(
-          path.resolve(__dirname, '..', '..', 'entry-asar', 'has-asar.js'),
-          path.resolve(entryAsar, 'index.js'),
-        );
         let pj = JSON.parse(
           (
             await asar.extractFile(
@@ -302,7 +298,23 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
             )
           ).toString('utf8'),
         );
-        pj.main = 'index.js';
+
+        if (pj.type === 'module') {
+          d('ERICK TEST!!!!');
+          await fs.copy(
+            path.resolve(__dirname, '..', '..', 'entry-asar', 'esm', 'has-asar.mjs'),
+            path.resolve(entryAsar, 'index.mjs'),
+          );
+          pj.main = 'index.mjs';
+        } else {
+          await fs.copy(
+            path.resolve(__dirname, '..', '..', 'entry-asar', 'has-asar.js'),
+            path.resolve(entryAsar, 'index.js'),
+          );
+          pj.main = 'index.js';
+        }
+        d(JSON.stringify(pj, null, 2));
+
         await fs.writeJson(path.resolve(entryAsar, 'package.json'), pj);
         const asarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar');
         await asar.createPackage(entryAsar, asarPath);
