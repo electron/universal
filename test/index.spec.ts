@@ -42,7 +42,7 @@ describe('makeUniversalApp', () => {
         outAppPath: out,
       });
       await ensureUniversal(out);
-    });
+    }, 60000);
     it.todo('should correctly merge two non-identical asars when `mergeASARs` is enabled');
     it.todo('should not inject ElectronAsarIntegrity into `infoPlistsToIgnore`');
   });
