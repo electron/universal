@@ -95,10 +95,10 @@ describe('makeUniversalApp', () => {
       await ensureUniversal(out);
       // We have three asars including the arch-agnostic shim
       expect(
-        (await fs.readdir(path.resolve(out, 'Contents', 'Resources'))).filter((p) =>
-          p.endsWith('asar'),
-        ),
-      ).toEqual(['app.asar', 'app-x64.asar', 'app-arm64.asar']);
+        (await fs.readdir(path.resolve(out, 'Contents', 'Resources')))
+          .filter((p) => p.endsWith('asar'))
+          .sort(),
+      ).toEqual(['app.asar', 'app-x64.asar', 'app-arm64.asar'].sort());
     }, 60000);
 
     it('should merge two different asars when `mergeASARs` is enabled', async () => {
