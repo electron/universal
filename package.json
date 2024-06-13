@@ -21,11 +21,12 @@
     "dist/*",
     "entry-asar/*",
     "!entry-asar/**/*.ts",
+    "!entry-asar/**/tsconfig.json",
     "README.md"
   ],
   "author": "Samuel Attard",
   "scripts": {
-    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json && tsc -p tsconfig.entry-asar.json && tsc -p tsconfig.entry-asar.esm.json",
+    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json && tsc -p entry-asar/esm/tsconfig.json && tsc -p entry-asar/cjs/tsconfig.json",
     "lint": "prettier --check \"{src,entry-asar,test}/**/*.ts\" \"*.ts\"",
     "prettier:write": "prettier --write \"{src,entry-asar,test}/**/*.ts\" \"*.ts\"",
     "prepublishOnly": "npm run build",

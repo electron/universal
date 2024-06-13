@@ -210,14 +210,27 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
 
         const entryAsar = path.resolve(tmpDir, 'entry-asar');
         await fs.mkdir(entryAsar);
-        await fs.copy(
-          path.resolve(__dirname, '..', '..', 'entry-asar', 'no-asar.js'),
-          path.resolve(entryAsar, 'index.js'),
-        );
+
         let pj = await fs.readJson(
           path.resolve(opts.x64AppPath, 'Contents', 'Resources', 'app', 'package.json'),
         );
-        pj.main = 'index.js';
+
+        // Load a shim that redirects to the correct folder for the architecture.
+        // This needs to be a different file depending on if the app entrypoint is CommonJS or ESM.
+        if (pj.type === 'module' || pj.main.endsWith('.mjs')) {
+          await fs.copy(
+            path.resolve(__dirname, '..', '..', 'entry-asar', 'esm', 'no-asar.mjs'),
+            path.resolve(entryAsar, 'index.mjs'),
+          );
+          pj.main = 'index.mjs';
+        } else {
+          await fs.copy(
+            path.resolve(__dirname, '..', '..', 'entry-asar', 'cjs', 'no-asar.js'),
+            path.resolve(entryAsar, 'index.js'),
+          );
+          pj.main = 'index.js';
+        }
+
         await fs.writeJson(path.resolve(entryAsar, 'package.json'), pj);
         await asar.createPackage(
           entryAsar,
@@ -299,8 +312,9 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
           ).toString('utf8'),
         );
 
-        if (pj.type === 'module') {
-          d('ERICK TEST!!!!');
+        // Load a shim that redirects to the correct `app.asar` for the architecture.
+        // This needs to be a different file depending on if the app entrypoint is CommonJS or ESM.
+        if (pj.type === 'module' || pj.main.endsWith('.mjs')) {
           await fs.copy(
             path.resolve(__dirname, '..', '..', 'entry-asar', 'esm', 'has-asar.mjs'),
             path.resolve(entryAsar, 'index.mjs'),
@@ -308,12 +322,11 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
           pj.main = 'index.mjs';
         } else {
           await fs.copy(
-            path.resolve(__dirname, '..', '..', 'entry-asar', 'has-asar.js'),
+            path.resolve(__dirname, '..', '..', 'entry-asar', 'cjs', 'has-asar.js'),
             path.resolve(entryAsar, 'index.js'),
           );
           pj.main = 'index.js';
         }
-        d(JSON.stringify(pj, null, 2));
 
         await fs.writeJson(path.resolve(entryAsar, 'package.json'), pj);
         const asarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar');
