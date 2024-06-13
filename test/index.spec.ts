@@ -70,7 +70,7 @@ describe('makeUniversalApp', () => {
 
   describe('asar mode', () => {
     it('should correctly merge two identical asars', async () => {
-      const out = path.resolve(appsPath, 'MergedAsar.app');
+      const out = path.resolve(appsOutPath, 'MergedAsar.app');
       await makeUniversalApp({
         x64AppPath: path.resolve(appsPath, 'X64Asar.app'),
         arm64AppPath: path.resolve(appsPath, 'Arm64Asar.app'),
@@ -86,7 +86,7 @@ describe('makeUniversalApp', () => {
     }, 60000);
 
     it('should create a shim if asars are different between architectures', async () => {
-      const out = path.resolve(appsPath, 'TwoAsars.app');
+      const out = path.resolve(appsOutPath, 'ShimmedAsar.app');
       await makeUniversalApp({
         x64AppPath: path.resolve(appsPath, 'X64Asar.app'),
         arm64AppPath: path.resolve(appsPath, 'Arm64AsarExtraFile.app'),
@@ -102,7 +102,7 @@ describe('makeUniversalApp', () => {
     }, 60000);
 
     it('should merge two different asars when `mergeASARs` is enabled', async () => {
-      const out = path.resolve(appsPath, 'TwoAsars.app');
+      const out = path.resolve(appsOutPath, 'MergedAsar.app');
       await makeUniversalApp({
         x64AppPath: path.resolve(appsPath, 'X64Asar.app'),
         arm64AppPath: path.resolve(appsPath, 'Arm64AsarExtraFile.app'),
@@ -120,7 +120,7 @@ describe('makeUniversalApp', () => {
     }, 60000);
 
     it('throws an error if `mergeASARs` is enabled and `singleArchFiles` is missing a unique file', async () => {
-      const out = path.resolve(appsPath, 'TwoAsars.app');
+      const out = path.resolve(appsOutPath, 'Error.app');
       await expect(
         makeUniversalApp({
           x64AppPath: path.resolve(appsPath, 'X64Asar.app'),
@@ -137,7 +137,7 @@ describe('makeUniversalApp', () => {
 
   describe('no asar mode', () => {
     it('should correctly merge two identical app folders', async () => {
-      const out = path.resolve(appsPath, 'MergedNoAsar.app');
+      const out = path.resolve(appsOutPath, 'MergedNoAsar.app');
       await makeUniversalApp({
         x64AppPath: path.resolve(appsPath, 'X64NoAsar.app'),
         arm64AppPath: path.resolve(appsPath, 'Arm64NoAsar.app'),
@@ -152,22 +152,7 @@ describe('makeUniversalApp', () => {
       ).toEqual(['app']);
     }, 60000);
 
-    // getting some kind of mach-o error right now!
-    it.skip('should create two separate non-identical app folders', async () => {
-      const out = path.resolve(appsPath, 'TwoFolders.app');
-      await makeUniversalApp({
-        x64AppPath: path.resolve(appsPath, 'X64NoAsar.app'),
-        arm64AppPath: path.resolve(appsPath, 'Arm64NoAsarExtraFile.app'),
-        outAppPath: out,
-      });
-      await ensureUniversal(out);
-      // We have three folders including the arch-agnostic shim
-      expect(
-        (await fs.readdir(path.resolve(out, 'Contents', 'Resources'))).filter((p) =>
-          p.startsWith('app'),
-        ),
-      ).toEqual(['app', 'app-x64', 'app-arm64']);
-    }, 60000);
+    it.todo('should shim two different app folders');
   });
 
   // TODO: Add tests for
