@@ -114,7 +114,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         uniqueToArm64,
       });
       throw new Error(
-        'While trying to merge mach-o files across your apps we found a mismatch, the number of mach-o files is not the same between the arm64 and x64 builds',
+        'While trying to merge files across your apps we found a mismatch: the number of files is not the same between the arm64 and x64 builds.',
       );
     }
 
