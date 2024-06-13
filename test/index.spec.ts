@@ -15,26 +15,56 @@ async function ensureUniversal(app: string) {
 }
 
 describe('makeUniversalApp', () => {
-  it('should correctly merge two identical asars', async () => {
-    const out = path.resolve(appsPath, 'MergedAsar.app');
-    await makeUniversalApp({
-      x64AppPath: path.resolve(appsPath, 'X64Asar.app'),
-      arm64AppPath: path.resolve(appsPath, 'Asar.app'),
-      outAppPath: out,
+  it.todo('`force` works');
+  it.todo('works for lipo binary resources');
+
+  describe('asar mode', () => {
+    it('should correctly merge two identical asars', async () => {
+      const out = path.resolve(appsPath, 'MergedAsar.app');
+      await makeUniversalApp({
+        x64AppPath: path.resolve(appsPath, 'X64Asar.app'),
+        arm64AppPath: path.resolve(appsPath, 'Asar.app'),
+        outAppPath: out,
+      });
+      await ensureUniversal(out);
+      // Only a single asar as they were identical
+      expect(
+        (await fs.readdir(path.resolve(out, 'Contents', 'Resources'))).filter((p) =>
+          p.endsWith('asar'),
+        ),
+      ).toEqual(['app.asar']);
+    }, 60000);
+    it('should create two separate non-identical ASAR files', async () => {
+      const out = path.resolve(appsPath, 'TwoAsars.app');
+      await makeUniversalApp({
+        x64AppPath: path.resolve(appsPath, 'X64Asar.app'),
+        arm64AppPath: path.resolve(appsPath, 'Asar.app'),
+        outAppPath: out,
+      });
+      await ensureUniversal(out);
     });
-    await ensureUniversal(out);
-    // Only a single asar as they were identical
-    expect(
-      (await fs.readdir(path.resolve(out, 'Contents', 'Resources'))).filter((p) =>
-        p.endsWith('asar'),
-      ),
-    ).toEqual(['app.asar']);
-  }, 60000);
+    it.todo('should correctly merge two non-identical asars when `mergeASARs` is enabled');
+    it.todo('should not inject ElectronAsarIntegrity into `infoPlistsToIgnore`');
+  });
+
+  describe('no asar mode', () => {
+    it('should correctly merge two identical app folders', async () => {
+      const out = path.resolve(appsPath, 'MergedNoAsar.app');
+      await makeUniversalApp({
+        x64AppPath: path.resolve(appsPath, 'X64NoAsar.app'),
+        arm64AppPath: path.resolve(appsPath, 'NoAsar.app'),
+        outAppPath: out,
+      });
+      await ensureUniversal(out);
+      // Only a single app folder as they were identical
+      expect(
+        (await fs.readdir(path.resolve(out, 'Contents', 'Resources'))).filter((p) => p === 'app'),
+      ).toEqual(['app']);
+    }, 60000);
+    it.todo('should create two separate non-identical app folders');
+  });
 
   // TODO: Add tests for
-  // * different asar files
-  // * identical app dirs
-  // * different app dirs
   // * different app dirs with different macho files
   // * identical app dirs with universal macho files
 });
