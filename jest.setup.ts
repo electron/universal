@@ -27,9 +27,17 @@ const templateApp = async (
 export default async () => {
   await fs.remove(appsDir);
   await fs.mkdirp(appsDir);
-  await templateApp('Asar.app', 'arm64', async (appPath) => {
+  await templateApp('Arm64Asar.app', 'arm64', async (appPath) => {
     await fs.copy(
       path.resolve(asarsDir, 'app.asar'),
+      path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+    );
+  });
+
+  // contains `extra-file.txt`
+  await templateApp('Arm64AsarExtraFile.app', 'arm64', async (appPath) => {
+    await fs.copy(
+      path.resolve(asarsDir, 'app2.asar'),
       path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
     );
   });
@@ -41,9 +49,17 @@ export default async () => {
     );
   });
 
-  await templateApp('NoAsar.app', 'arm64', async (appPath) => {
+  await templateApp('Arm64NoAsar.app', 'arm64', async (appPath) => {
     await fs.copy(
       path.resolve(asarsDir, 'app'),
+      path.resolve(appPath, 'Contents', 'Resources', 'app'),
+    );
+  });
+
+  // contains `extra-file.txt`
+  await templateApp('Arm64NoAsarExtraFile.app', 'arm64', async (appPath) => {
+    await fs.copy(
+      path.resolve(asarsDir, 'app2'),
       path.resolve(appPath, 'Contents', 'Resources', 'app'),
     );
   });

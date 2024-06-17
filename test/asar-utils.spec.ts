@@ -8,11 +8,13 @@ const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
 describe('asar-utils', () => {
   describe('detectAsarMode', () => {
     it('should correctly detect an asar enabled app', async () => {
-      expect(await detectAsarMode(path.resolve(appsPath, 'Asar.app'))).toBe(AsarMode.HAS_ASAR);
+      expect(await detectAsarMode(path.resolve(appsPath, 'Arm64Asar.app'))).toBe(AsarMode.HAS_ASAR);
     });
 
     it('should correctly detect an app without an asar', async () => {
-      expect(await detectAsarMode(path.resolve(appsPath, 'NoAsar.app'))).toBe(AsarMode.NO_ASAR);
+      expect(await detectAsarMode(path.resolve(appsPath, 'Arm64NoAsar.app'))).toBe(
+        AsarMode.NO_ASAR,
+      );
     });
   });
 
