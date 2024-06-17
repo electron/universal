@@ -10,8 +10,8 @@ describe('file-utils', () => {
     let noAsarFiles: AppFile[];
 
     beforeAll(async () => {
-      asarFiles = await getAllAppFiles(path.resolve(appsPath, 'Asar.app'));
-      noAsarFiles = await getAllAppFiles(path.resolve(appsPath, 'NoAsar.app'));
+      asarFiles = await getAllAppFiles(path.resolve(appsPath, 'Arm64Asar.app'));
+      noAsarFiles = await getAllAppFiles(path.resolve(appsPath, 'Arm64NoAsar.app'));
     });
 
     it('should correctly identify plist files', async () => {
