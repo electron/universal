@@ -20,7 +20,7 @@
   "files": [
     "dist/*",
     "entry-asar/*",
-    "!entry-asar/**/*.ts",
+    "!entry-asar/**/*.{ts,mts}",
     "!entry-asar/**/tsconfig.json",
     "README.md"
   ],
