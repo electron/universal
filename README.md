@@ -22,6 +22,11 @@ await makeUniversalApp({
 });
 ```
 
+## Advanced configuration
+
+The basic usage patterns will work for most apps out of the box. Additional configuration
+options are available for advanced usecases.
+
 ### Merging ASAR archives to reduce app size
 
 **Added in [v1.2.0](https://github.com/electron/universal/commit/38ab1c3559e25382957d608e49e624dc72a4409c)**
