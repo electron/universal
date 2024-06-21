@@ -1,10 +1,10 @@
-import * as asar from '@electron/asar';
+import asar from '@electron/asar';
 import { execFileSync } from 'child_process';
-import * as crypto from 'crypto';
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import * as minimatch from 'minimatch';
-import * as os from 'os';
+import crypto from 'crypto';
+import fs from 'fs-extra';
+import path from 'path';
+import { minimatch } from 'minimatch';
+import os from 'os';
 import { d } from './debug';
 
 const LIPO = 'lipo';
@@ -25,12 +25,15 @@ export type MergeASARsOptions = {
 // See: https://github.com/apple-opensource-mirror/llvmCore/blob/0c60489d96c87140db9a6a14c6e82b15f5e5d252/include/llvm/Object/MachOFormat.h#L108-L112
 const MACHO_MAGIC = new Set([
   // 32-bit Mach-O
-  0xfeedface,
-  0xcefaedfe,
+  0xfeedface, 0xcefaedfe,
 
   // 64-bit Mach-O
-  0xfeedfacf,
-  0xcffaedfe,
+  0xfeedfacf, 0xcffaedfe,
+]);
+
+const MACHO_UNIVERSAL_MAGIC = new Set([
+  // universal
+  0xcafebabe, 0xbebafeca,
 ]);
 
 export const detectAsarMode = async (appPath: string) => {
@@ -144,6 +147,13 @@ export const mergeASARs = async ({
     const arm64Content = asar.extractFile(arm64AsarPath, file);
 
     if (x64Content.compare(arm64Content) === 0) {
+      continue;
+    }
+
+    if (
+      MACHO_UNIVERSAL_MAGIC.has(x64Content.readUInt32LE(0)) &&
+      MACHO_UNIVERSAL_MAGIC.has(arm64Content.readUInt32LE(0))
+    ) {
       continue;
     }
 

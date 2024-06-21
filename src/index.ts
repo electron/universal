@@ -1,8 +1,7 @@
 import { spawn } from '@malept/cross-spawn-promise';
 import * as asar from '@electron/asar';
-import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import * as os from 'os';
 import * as path from 'path';
 import * as plist from 'plist';
@@ -13,37 +12,63 @@ import { AsarMode, detectAsarMode, generateAsarIntegrity, mergeASARs } from './a
 import { sha } from './sha';
 import { d } from './debug';
 
+/**
+ * Options to pass into the {@link makeUniversalApp} function.
+ *
+ * Requires absolute paths for input x64 and arm64 apps and an absolute path to the
+ * output universal app.
+ */
 export type MakeUniversalOpts = {
   /**
-   * Absolute file system path to the x64 version of your application.  E.g. /Foo/bar/MyApp_x64.app
+   * Absolute file system path to the x64 version of your application (e.g. `/Foo/bar/MyApp_x64.app`).
    */
   x64AppPath: string;
   /**
-   * Absolute file system path to the arm64 version of your application.  E.g. /Foo/bar/MyApp_arm64.app
+   * Absolute file system path to the arm64 version of your application (e.g. `/Foo/bar/MyApp_arm64.app`).
    */
   arm64AppPath: string;
   /**
-   * Absolute file system path you want the universal app to be written to.  E.g. /Foo/var/MyApp_universal.app
+   * Absolute file system path you want the universal app to be written to (e.g. `/Foo/var/MyApp_universal.app`).
    *
-   * If this file exists it will be overwritten ONLY if "force" is set to true
+   * If this file exists on disk already, it will be overwritten ONLY if {@link MakeUniversalOpts.force} is set to `true`.
    */
   outAppPath: string;
   /**
-   * Forcefully overwrite any existing files that are in the way of generating the universal application
+   * Forcefully overwrite any existing files that are in the way of generating the universal application.
+   *
+   * @defaultValue `false`
    */
-  force: boolean;
+  force?: boolean;
   /**
    * Merge x64 and arm64 ASARs into one.
+   *
+   * @defaultValue `false`
    */
   mergeASARs?: boolean;
   /**
-   * Minimatch pattern of paths that are allowed to be present in one of the ASAR files, but not in the other.
+   * If {@link MakeUniversalOpts.mergeASARs} is enabled, this property provides a
+   * {@link https://github.com/isaacs/minimatch?tab=readme-ov-file#features | minimatch}
+   * pattern of paths that are allowed to be present in one of the ASAR files, but not in the other.
+   *
    */
   singleArchFiles?: string;
   /**
-   * Minimatch pattern of binaries that are expected to be the same x64 binary in both of the application files.
+   * A {@link https://github.com/isaacs/minimatch?tab=readme-ov-file#features | minimatch}
+   * pattern of binaries that are expected to be the same x64 binary in both of the application files.
+   *
+   * Use this if your application contains binaries that have already been merged into a universal file
+   * using the `lipo` tool.
+   *
+   * @see Apple's {@link https://developer.apple.com/documentation/apple-silicon/building-a-universal-macos-binary | Building a universal macOS binary} documentation
    */
   x64ArchFiles?: string;
+  /**
+   * A {@link https://github.com/isaacs/minimatch?tab=readme-ov-file#features | minimatch} pattern of `Info.plist`
+   * paths that should not receive an injected `ElectronAsarIntegrity` value.
+   *
+   * Use this if your application contains another bundle that's already signed.
+   */
+  infoPlistsToIgnore?: string;
 };
 
 const dupedFiles = (files: AppFile[]) =>
@@ -130,7 +155,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         );
       }
     }
-
+    const knownMergedMachOFiles = new Set();
     for (const machOFile of x64Files.filter((f) => f.type === AppFileType.MACHO)) {
       const first = await fs.realpath(path.resolve(tmpApp, machOFile.relativePath));
       const second = await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath));
@@ -167,6 +192,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         '-output',
         await fs.realpath(path.resolve(tmpApp, machOFile.relativePath)),
       ]);
+      knownMergedMachOFiles.add(machOFile.relativePath);
     }
 
     /**
@@ -182,8 +208,18 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app'),
         { compareSize: true, compareContent: true },
       );
+      const differences = comparison.diffSet!.filter((difference) => difference.state !== 'equal');
+      d(`Found ${differences.length} difference(s) between the x64 and arm64 folders`);
+      const nonMergedDifferences = differences.filter(
+        (difference) =>
+          !difference.name1 ||
+          !knownMergedMachOFiles.has(
+            path.join('Contents', 'Resources', 'app', difference.relativePath, difference.name1),
+          ),
+      );
+      d(`After discluding MachO files merged with lipo ${nonMergedDifferences.length} remain.`);
 
-      if (!comparison.same) {
+      if (nonMergedDifferences.length > 0) {
         d('x64 and arm64 app folders are different, creating dynamic entry ASAR');
         await fs.move(
           path.resolve(tmpApp, 'Contents', 'Resources', 'app'),
@@ -322,7 +358,12 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         );
       }
 
-      const mergedPlist = { ...x64Plist, ElectronAsarIntegrity: generatedIntegrity };
+      const injectAsarIntegrity =
+        !opts.infoPlistsToIgnore ||
+        minimatch(plistFile.relativePath, opts.infoPlistsToIgnore, { matchBase: true });
+      const mergedPlist = injectAsarIntegrity
+        ? { ...x64Plist, ElectronAsarIntegrity: generatedIntegrity }
+        : { ...x64Plist };
 
       await fs.writeFile(path.resolve(tmpApp, plistFile.relativePath), plist.build(mergedPlist));
     }

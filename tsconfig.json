@@ -13,9 +13,11 @@
     ],
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "declaration": true
   },
   "include": [
-    "src"
+    "src",
+    "entry-asar"
   ]
 }

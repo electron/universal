@@ -1,3 +1,9 @@
 node_modules
 dist
+entry-asar/*.js*
+entry-asar/*.ts
 *.app
+test/fixtures/apps
+coverage
+docs
+.vscode
