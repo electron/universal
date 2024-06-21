@@ -27,6 +27,7 @@
   "author": "Samuel Attard",
   "scripts": {
     "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json && tsc -p entry-asar/esm/tsconfig.json && tsc -p entry-asar/cjs/tsconfig.json",
+    "build:docs": "npx typedoc",
     "lint": "prettier --check \"{src,entry-asar,test}/**/*.ts\" \"*.ts\"",
     "prettier:write": "prettier --write \"{src,entry-asar,test}/**/*.ts\" \"*.ts\"",
     "prepublishOnly": "npm run build",
@@ -48,6 +49,7 @@
     "lint-staged": "^15.0.2",
     "prettier": "^3.0.3",
     "ts-jest": "^29.1.1",
+    "typedoc": "~0.25.13",
     "typescript": "^5.2.2"
   },
   "dependencies": {

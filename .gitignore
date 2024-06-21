@@ -7,3 +7,5 @@ entry-asar/esm/*.d.?ts
 *.app
 test/fixtures/apps
 coverage
+docs
+.vscode
