@@ -10,5 +10,6 @@ module.exports = {
       }
     ]
   },
-  globalSetup: './jest.setup.ts'
+  globalSetup: './jest.setup.ts',
+  testTimeout: 10000,
 };
