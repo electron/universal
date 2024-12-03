@@ -24,6 +24,9 @@
     "README.md"
   ],
   "author": "Samuel Attard",
+  "publishConfig": {
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json && tsc -p tsconfig.entry-asar.json",
     "build:docs": "npx typedoc",
