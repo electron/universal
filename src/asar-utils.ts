@@ -1,4 +1,4 @@
-import asar from '@electron/asar';
+import asar, { FileProperties } from '@electron/asar';
 import { execFileSync } from 'child_process';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -59,7 +59,7 @@ export const generateAsarIntegrity = (asarPath: string) => {
   };
 };
 
-function toRelativePath(file: string): string {
+export function toRelativePath(file: string): string {
   return file.replace(/^\//, '');
 }
 
@@ -84,32 +84,13 @@ export const mergeASARs = async ({
 }: MergeASARsOptions): Promise<void> => {
   d(`merging ${x64AsarPath} and ${arm64AsarPath}`);
 
-  const x64Files = new Set(asar.listPackage(x64AsarPath).map(toRelativePath));
-  const arm64Files = new Set(asar.listPackage(arm64AsarPath).map(toRelativePath));
+  const x64Dir = await fs.mkdtemp(path.join(os.tmpdir(), 'x64-'));
+  const arm64Dir = await fs.mkdtemp(path.join(os.tmpdir(), 'arm64-'));
 
-  //
-  // Build set of unpacked directories and files
-  //
-
-  const unpackedFiles = new Set<string>();
-
-  function buildUnpacked(a: string, fileList: Set<string>): void {
-    for (const file of fileList) {
-      const stat = asar.statFile(a, file);
-
-      if (!('unpacked' in stat) || !stat.unpacked) {
-        continue;
-      }
-
-      if ('files' in stat) {
-        continue;
-      }
-      unpackedFiles.add(file);
-    }
-  }
-
-  buildUnpacked(x64AsarPath, x64Files);
-  buildUnpacked(arm64AsarPath, arm64Files);
+  const x64Files = new Set(asar.listPackage(x64AsarPath, { isPack: false }).map(toRelativePath));
+  const arm64Files = new Set(
+    asar.listPackage(arm64AsarPath, { isPack: false }).map(toRelativePath),
+  );
 
   //
   // Build list of files/directories unique to each asar
@@ -127,6 +108,16 @@ export const mergeASARs = async ({
       arm64Unique.push(file);
     }
   }
+
+  //
+  // Build set of unpacked directories and files and output as explicit ordering file
+  // Note: We don't know the ordering of unique files, so we exclude them from the ordering file?
+  //
+
+  const ordering = await generateOrderingConfig(
+    { asarPath: x64AsarPath, files: x64Files },
+    { asarPath: arm64AsarPath, files: arm64Files },
+  );
 
   //
   // Find common bindings with different content
@@ -168,9 +159,6 @@ export const mergeASARs = async ({
   // Extract both
   //
 
-  const x64Dir = await fs.mkdtemp(path.join(os.tmpdir(), 'x64-'));
-  const arm64Dir = await fs.mkdtemp(path.join(os.tmpdir(), 'arm64-'));
-
   try {
     d(`extracting ${x64AsarPath} to ${x64Dir}`);
     asar.extractAll(x64AsarPath, x64Dir);
@@ -203,21 +191,43 @@ export const mergeASARs = async ({
 
     d(`creating archive at ${outputAsarPath}`);
 
-    const resolvedUnpack = Array.from(unpackedFiles).map((file) => path.join(x64Dir, file));
-
-    let unpack: string | undefined;
-    if (resolvedUnpack.length > 1) {
-      unpack = `{${resolvedUnpack.join(',')}}`;
-    } else if (resolvedUnpack.length === 1) {
-      unpack = resolvedUnpack[0];
-    }
-
-    await asar.createPackageWithOptions(x64Dir, outputAsarPath, {
-      unpack,
-    });
+    await asar.createPackageWithOptions(x64Dir, outputAsarPath, { ordering });
 
     d('done merging');
   } finally {
     await Promise.all([fs.remove(x64Dir), fs.remove(arm64Dir)]);
   }
 };
+
+type ArchSpecificOptions = {
+  asarPath: string;
+  files: Set<string>;
+};
+
+export async function generateOrderingConfig(x64: ArchSpecificOptions, arm64: ArchSpecificOptions) {
+  const ordering: Record<string, FileProperties['properties']> = {};
+
+  function buildUnpacked(asarPath: string, fileList: Set<string>): void {
+    for (const file of fileList) {
+      const stat = asar.statFile(asarPath, file);
+
+      let unpack = 'unpacked' in stat && stat.unpacked;
+
+      if ('files' in stat) {
+        continue;
+      }
+
+      ordering[file] = { unpack };
+    }
+  }
+
+  buildUnpacked(x64.asarPath, x64.files);
+  buildUnpacked(arm64.asarPath, arm64.files);
+
+  const data = Object.entries(ordering).reduce((prev, curr) => {
+    return `${prev}${curr[0]}:${JSON.stringify(curr[1])}\n`;
+  }, '');
+  const orderingFile = path.join(os.tmpdir(), 'ordering.txt');
+  await fs.writeFile(orderingFile, data);
+  return orderingFile;
+}

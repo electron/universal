@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`asar-utils generateOrderingConfig should properly read \`unpacked\` flag and generate ordering config 1`] = `
+"dir1/file1.txt:{"unpack":false}
+dir2/file2.png:{"unpack":true}
+dir2/file3.txt:{"unpack":true}
+emptyfile.txt:{"unpack":false}
+file0.txt:{"unpack":false}
+"
+`;

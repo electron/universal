@@ -55,7 +55,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@electron/asar": "^3.2.7",
+    "@electron/asar": "https://github.com/mmaietta/asar.git#asar-ordering-properties",
     "@malept/cross-spawn-promise": "^2.0.0",
     "debug": "^4.3.1",
     "dir-compare": "^4.2.0",
