@@ -1,5 +1,4 @@
-import { readFilesystemSync } from '@electron/asar/lib/disk';
-import { Filesystem } from '@electron/asar/lib/filesystem';
+import { readArchiveHeaderSync } from '@electron/asar/lib/disk';
 import { downloadArtifact } from '@electron/get';
 import { spawn } from '@malept/cross-spawn-promise';
 import * as zip from 'cross-zip';
@@ -11,10 +10,7 @@ import * as fileUtils from '../dist/cjs/file-utils';
 export const asarsDir = path.resolve(__dirname, 'fixtures', 'asars');
 export const appsDir = path.resolve(__dirname, 'fixtures', 'apps');
 
-export const verifyApp = async (
-  appPath: string,
-  additionalVerifications?: (asarFilesystem: Filesystem) => Promise<void>,
-) => {
+export const verifyApp = async (appPath: string) => {
   await ensureUniversal(appPath);
 
   const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
@@ -23,8 +19,9 @@ export const verifyApp = async (
   // sort for consistent result
   const asars = resourcesDirContents.filter((p) => p.endsWith('.asar')).sort();
   for await (const asar of asars) {
-    // check asar header and any other Filesystem verifications
-    await verifyHeader(path.resolve(resourcesDir, asar), additionalVerifications);
+    // verify header
+    const asarFs = readArchiveHeaderSync(path.resolve(resourcesDir, asar));
+    expect(removeUnstableProperties(asarFs.header)).toMatchSnapshot();
   }
 
   // check all app and unpacked dirs
@@ -52,35 +49,22 @@ export const verifyApp = async (
 
   const integrityMap: Record<string, string> = {};
   const integrity = await Promise.all(
-    infoPlists.map((ip) => verifyAsarIntegrityEntries(path.resolve(appPath, ip))),
+    infoPlists.map((ip) => extractAsarIntegrity(path.resolve(appPath, ip))),
   );
   for (let i = 0; i < integrity.length; i++) {
-    const asarIntegrity = integrity[i];
     const relativePath = infoPlists[i];
+    const asarIntegrity = integrity[i];
     integrityMap[relativePath] = asarIntegrity;
   }
   expect(integrityMap).toMatchSnapshot();
 };
 
 // note: `infoPlistsToIgnore` will not have integrity in sub-app plists
-export const verifyAsarIntegrityEntries = async (infoPlist: string) => {
+const extractAsarIntegrity = async (infoPlist: string) => {
   const { ElectronAsarIntegrity: integrity, ...otherData } = plist.parse(
     await fs.readFile(infoPlist, 'utf-8'),
   ) as any;
   return integrity;
-};
-
-export const verifyHeader = async (
-  asarPath: string,
-  additionalVerifications?: (asarFilesystem: Filesystem) => Promise<void>,
-) => {
-  const asarFs = readFilesystemSync(asarPath);
-
-  // for verifying additional files within the Asar Filesystem
-  await additionalVerifications?.(asarFs);
-
-  // verify header
-  expect(removeUnstableProperties(asarFs.getHeader())).toMatchSnapshot();
 };
 
 export const verifyFileTree = async (dirPath: string) => {

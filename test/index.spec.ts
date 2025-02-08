@@ -148,7 +148,7 @@ describe('makeUniversalApp', () => {
     it('should shim two different app folders', async () => {
       const arm64AppPath = await templateApp('ShimArm64.app', 'arm64', async (appPath) => {
         const { testPath } = await createTestApp('shimArm64', {
-          'i-aint-got-no-rythm.bin': 'boomshakalaka',
+          'i-aint-got-no-rhythm.bin': 'boomshakalaka',
         });
         await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
       });

@@ -31,9 +31,11 @@ exports[`makeUniversalApp asar mode should correctly merge two identical asars 1
 
 exports[`makeUniversalApp asar mode should correctly merge two identical asars 2`] = `
 {
-  "Resources/app.asar": {
-    "algorithm": "SHA256",
-    "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
+    },
   },
 }
 `;
@@ -138,17 +140,19 @@ exports[`makeUniversalApp asar mode should create a shim if asars are different 
 
 exports[`makeUniversalApp asar mode should create a shim if asars are different between architectures 4`] = `
 {
-  "Resources/app-arm64.asar": {
-    "algorithm": "SHA256",
-    "hash": "71db54541357128943df64d54480a22d0cdf4c283f2044f48101fb1fc6e6fb2d",
-  },
-  "Resources/app-x64.asar": {
-    "algorithm": "SHA256",
-    "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
-  },
-  "Resources/app.asar": {
-    "algorithm": "SHA256",
-    "hash": "b62aaaed07ff72dc33da1720d900e0443c060285ef374ce1bdaef1d4f28b5fe4",
+  "Contents/Info.plist": {
+    "Resources/app-arm64.asar": {
+      "algorithm": "SHA256",
+      "hash": "71db54541357128943df64d54480a22d0cdf4c283f2044f48101fb1fc6e6fb2d",
+    },
+    "Resources/app-x64.asar": {
+      "algorithm": "SHA256",
+      "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
+    },
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "b62aaaed07ff72dc33da1720d900e0443c060285ef374ce1bdaef1d4f28b5fe4",
+    },
   },
 }
 `;
@@ -156,6 +160,17 @@ exports[`makeUniversalApp asar mode should create a shim if asars are different 
 exports[`makeUniversalApp asar mode should merge two different asars when \`mergeASARs\` is enabled 1`] = `
 {
   "files": {
+    "extra-file.txt": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "b8f261b95f81761658c8875b33a68001d8750fd898f447373bf6347e779bc3de",
+        ],
+        "hash": "b8f261b95f81761658c8875b33a68001d8750fd898f447373bf6347e779bc3de",
+      },
+      "size": 15,
+    },
     "index.js": {
       "integrity": {
         "algorithm": "SHA256",
@@ -184,9 +199,11 @@ exports[`makeUniversalApp asar mode should merge two different asars when \`merg
 
 exports[`makeUniversalApp asar mode should merge two different asars when \`mergeASARs\` is enabled 2`] = `
 {
-  "Resources/app.asar": {
-    "algorithm": "SHA256",
-    "hash": "71db54541357128943df64d54480a22d0cdf4c283f2044f48101fb1fc6e6fb2d",
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "71db54541357128943df64d54480a22d0cdf4c283f2044f48101fb1fc6e6fb2d",
+    },
   },
 }
 `;
@@ -251,23 +268,7 @@ exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into
 
 exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 2`] = `
 {
-  "Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/Info.plist": undefined,
-  "Contents/Frameworks/Electron Helper (GPU).app/Contents/Info.plist": undefined,
-  "Contents/Frameworks/Electron Helper (Plugin).app/Contents/Info.plist": undefined,
-  "Contents/Frameworks/Electron Helper (Renderer).app/Contents/Info.plist": undefined,
-  "Contents/Frameworks/Electron Helper.app/Contents/Info.plist": undefined,
-  "Contents/Frameworks/Mantle.framework/Versions/A/Resources/Info.plist": undefined,
-  "Contents/Frameworks/ReactiveObjC.framework/Versions/A/Resources/Info.plist": undefined,
-  "Contents/Frameworks/Squirrel.framework/Versions/A/Resources/Info.plist": undefined,
   "Contents/Info.plist": undefined,
-  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/Info.plist": undefined,
-  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Helper (GPU).app/Contents/Info.plist": undefined,
-  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Helper (Plugin).app/Contents/Info.plist": undefined,
-  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Helper (Renderer).app/Contents/Info.plist": undefined,
-  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Helper.app/Contents/Info.plist": undefined,
-  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Mantle.framework/Versions/A/Resources/Info.plist": undefined,
-  "Contents/Resources/SubApp-1.app/Contents/Frameworks/ReactiveObjC.framework/Versions/A/Resources/Info.plist": undefined,
-  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Squirrel.framework/Versions/A/Resources/Info.plist": undefined,
   "Contents/Resources/SubApp-1.app/Contents/Info.plist": undefined,
 }
 `;
@@ -303,9 +304,11 @@ exports[`makeUniversalApp force packages successfully if \`out\` bundle already 
 
 exports[`makeUniversalApp force packages successfully if \`out\` bundle already exists and \`force\` is \`true\` 2`] = `
 {
-  "Resources/app.asar": {
-    "algorithm": "SHA256",
-    "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
+    },
   },
 }
 `;
@@ -323,7 +326,11 @@ exports[`makeUniversalApp no asar mode should correctly merge two identical app 
 ]
 `;
 
-exports[`makeUniversalApp no asar mode should correctly merge two identical app folders 2`] = `{}`;
+exports[`makeUniversalApp no asar mode should correctly merge two identical app folders 2`] = `
+{
+  "Contents/Info.plist": {},
+}
+`;
 
 exports[`makeUniversalApp no asar mode should shim two different app folders 1`] = `
 {
@@ -356,7 +363,7 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 1`]
 
 exports[`makeUniversalApp no asar mode should shim two different app folders 2`] = `
 [
-  "private/var/i-aint-got-no-rythm.bin",
+  "private/var/i-aint-got-no-rhythm.bin",
 ]
 `;
 
@@ -374,7 +381,7 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 3`]
     "content": "hello world",
     "name": "private/var/file.txt",
   },
-  "private/var/i-aint-got-no-rythm.bin",
+  "private/var/i-aint-got-no-rhythm.bin",
 ]
 `;
 
@@ -396,4 +403,8 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 4`]
 ]
 `;
 
-exports[`makeUniversalApp no asar mode should shim two different app folders 5`] = `{}`;
+exports[`makeUniversalApp no asar mode should shim two different app folders 5`] = `
+{
+  "Contents/Info.plist": {},
+}
+`;
