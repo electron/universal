@@ -3,6 +3,7 @@ import * as path from 'path';
 
 import { makeUniversalApp } from '../dist/cjs/index';
 import { createTestApp, templateApp, verifyApp } from './util';
+import { createPackage } from '@electron/asar';
 
 const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
 const appsOutPath = path.resolve(__dirname, 'fixtures', 'apps', 'out');
@@ -100,7 +101,40 @@ describe('makeUniversalApp', () => {
       ).rejects.toThrow(/Detected unique file "extra-file\.txt"/);
     }, 60000);
 
-    it.todo('should not inject ElectronAsarIntegrity into `infoPlistsToIgnore`');
+    it.only('should not inject ElectronAsarIntegrity into `infoPlistsToIgnore`', async () => {
+      const arm64AppPath = await templateApp('Arm64-1.app', 'arm64', async (appPath) => {
+        const { testPath } = await createTestApp('Arm64-1');
+        const asarOutPath = path.resolve(appsOutPath, '1.asar');
+        await createPackage(testPath, asarOutPath);
+        await fs.copy(asarOutPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
+        await templateApp('SubApp-1.app', 'arm64', async (subArm64AppPath) => {
+          await fs.move(
+            subArm64AppPath,
+            path.resolve(appPath, 'Contents', 'Resources', path.basename(subArm64AppPath)),
+          );
+        });
+      });
+      const x64AppPath = await templateApp('X64-1.app', 'x64', async (appPath) => {
+        const { testPath } = await createTestApp('X64-1');
+        const asarOutPath = path.resolve(appsOutPath, '2.asar');
+        await createPackage(testPath, asarOutPath);
+        await fs.copy(asarOutPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
+        await templateApp('SubApp-1.app', 'x64', async (subArm64AppPath) => {
+          await fs.move(
+            subArm64AppPath,
+            path.resolve(appPath, 'Contents', 'Resources', path.basename(subArm64AppPath)),
+          );
+        });
+      });
+      const outAppPath = path.resolve(appsOutPath, 'UnmodifiedPlist.app');
+      await makeUniversalApp({
+        x64AppPath,
+        arm64AppPath,
+        outAppPath,
+        infoPlistsToIgnore: 'SubApp-1.app/Contents/Info.plist',
+      });
+      await verifyApp(outAppPath);
+    }, 60000);
   });
 
   describe('no asar mode', () => {

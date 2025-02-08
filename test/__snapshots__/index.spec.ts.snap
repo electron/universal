@@ -191,6 +191,66 @@ exports[`makeUniversalApp asar mode should merge two different asars when \`merg
 }
 `;
 
+exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 1`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+        ],
+        "hash": "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+      },
+      "size": 66,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+    "private": {
+      "files": {
+        "var": {
+          "files": {
+            "app": {
+              "files": {
+                "file.txt": {
+                  "link": "private/var/file.txt",
+                },
+              },
+            },
+            "file.txt": {
+              "integrity": {
+                "algorithm": "SHA256",
+                "blockSize": 4194304,
+                "blocks": [
+                  "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+                ],
+                "hash": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+              },
+              "size": 11,
+            },
+          },
+        },
+      },
+    },
+    "var": {
+      "link": "private/var",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 2`] = `undefined`;
+
 exports[`makeUniversalApp force packages successfully if \`out\` bundle already exists and \`force\` is \`true\` 1`] = `
 {
   "files": {

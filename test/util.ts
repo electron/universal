@@ -4,7 +4,6 @@ import { downloadArtifact } from '@electron/get';
 import { spawn } from '@malept/cross-spawn-promise';
 import * as zip from 'cross-zip';
 import * as fs from 'fs-extra';
-import { Dirent } from 'fs-extra';
 import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
@@ -30,7 +29,12 @@ export const verifyApp = async (
 
   // check all app and unpacked dirs
   const appDirs = resourcesDirContents
-    .filter((p) => path.basename(p).includes('app') && !path.basename(p).endsWith('.asar'))
+    .filter(
+      (p) =>
+        !path.basename(p).endsWith('.asar') &&
+        path.basename(p).includes('app') && // it's an app dir
+        !p.endsWith('.app'), // but we don't want any sub-apps (Something.app)
+    )
     .sort();
   for await (const dir of appDirs) {
     await verifyFileTree(path.resolve(resourcesDir, dir));
