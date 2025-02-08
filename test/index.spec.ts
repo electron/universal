@@ -1,19 +1,11 @@
-import { spawn } from '@malept/cross-spawn-promise';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import { makeUniversalApp } from '../dist/cjs/index';
+import { createTestApp, templateApp, verifyApp } from './util';
 
 const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
 const appsOutPath = path.resolve(__dirname, 'fixtures', 'apps', 'out');
-
-async function ensureUniversal(app: string) {
-  const exe = path.resolve(app, 'Contents', 'MacOS', 'Electron');
-  const result = await spawn(exe);
-  expect(result).toContain('arm64');
-  const result2 = await spawn('arch', ['-x86_64', exe]);
-  expect(result2).toContain('x64');
-}
 
 // See `jest.setup.ts` for app fixture setup process
 describe('makeUniversalApp', () => {
@@ -58,13 +50,7 @@ describe('makeUniversalApp', () => {
         outAppPath: out,
         force: true,
       });
-      await ensureUniversal(out);
-      // Only a single asar as they were identical
-      expect(
-        (await fs.readdir(path.resolve(out, 'Contents', 'Resources'))).filter((p) =>
-          p.endsWith('asar'),
-        ),
-      ).toEqual(['app.asar']);
+      await verifyApp(out);
     }, 60000);
   });
 
@@ -76,13 +62,7 @@ describe('makeUniversalApp', () => {
         arm64AppPath: path.resolve(appsPath, 'Arm64Asar.app'),
         outAppPath: out,
       });
-      await ensureUniversal(out);
-      // Only a single asar as they were identical
-      expect(
-        (await fs.readdir(path.resolve(out, 'Contents', 'Resources'))).filter((p) =>
-          p.endsWith('asar'),
-        ),
-      ).toEqual(['app.asar']);
+      await verifyApp(out);
     }, 60000);
 
     it('should create a shim if asars are different between architectures', async () => {
@@ -92,13 +72,7 @@ describe('makeUniversalApp', () => {
         arm64AppPath: path.resolve(appsPath, 'Arm64AsarExtraFile.app'),
         outAppPath: out,
       });
-      await ensureUniversal(out);
-      // We have three asars including the arch-agnostic shim
-      expect(
-        (await fs.readdir(path.resolve(out, 'Contents', 'Resources')))
-          .filter((p) => p.endsWith('asar'))
-          .sort(),
-      ).toEqual(['app.asar', 'app-x64.asar', 'app-arm64.asar'].sort());
+      await verifyApp(out);
     }, 60000);
 
     it('should merge two different asars when `mergeASARs` is enabled', async () => {
@@ -110,13 +84,7 @@ describe('makeUniversalApp', () => {
         mergeASARs: true,
         singleArchFiles: 'extra-file.txt',
       });
-      await ensureUniversal(out);
-      // Only a single merged asar
-      expect(
-        (await fs.readdir(path.resolve(out, 'Contents', 'Resources'))).filter((p) =>
-          p.endsWith('asar'),
-        ),
-      ).toEqual(['app.asar']);
+      await verifyApp(out);
     }, 60000);
 
     it('throws an error if `mergeASARs` is enabled and `singleArchFiles` is missing a unique file', async () => {
@@ -143,16 +111,30 @@ describe('makeUniversalApp', () => {
         arm64AppPath: path.resolve(appsPath, 'Arm64NoAsar.app'),
         outAppPath: out,
       });
-      await ensureUniversal(out);
-      // Only a single app folder as they were identical
-      expect(
-        (await fs.readdir(path.resolve(out, 'Contents', 'Resources'))).filter((p) =>
-          p.startsWith('app'),
-        ),
-      ).toEqual(['app']);
+      await verifyApp(out);
     }, 60000);
 
-    it.todo('should shim two different app folders');
+    it('should shim two different app folders', async () => {
+      const arm64AppPath = await templateApp('ShimArm64.app', 'arm64', async (appPath) => {
+        const { testPath } = await createTestApp('shimArm64', {
+          'i-aint-got-no-rythm.bin': 'boomshakalaka',
+        });
+        await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
+      });
+
+      const x64AppPath = await templateApp('ShimX64.app', 'x64', async (appPath) => {
+        const { testPath } = await createTestApp('shimX64', { 'hello-world.bin': 'Hello World' });
+        await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
+      });
+
+      const outAppPath = path.resolve(appsOutPath, 'ShimNoAsar.app');
+      await makeUniversalApp({
+        x64AppPath,
+        arm64AppPath,
+        outAppPath,
+      });
+      await verifyApp(outAppPath);
+    }, 60000);
   });
 
   // TODO: Add tests for

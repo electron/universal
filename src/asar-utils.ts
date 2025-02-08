@@ -84,8 +84,10 @@ export const mergeASARs = async ({
 }: MergeASARsOptions): Promise<void> => {
   d(`merging ${x64AsarPath} and ${arm64AsarPath}`);
 
-  const x64Files = new Set(asar.listPackage(x64AsarPath).map(toRelativePath));
-  const arm64Files = new Set(asar.listPackage(arm64AsarPath).map(toRelativePath));
+  const x64Files = new Set(asar.listPackage(x64AsarPath, { isPack: false }).map(toRelativePath));
+  const arm64Files = new Set(
+    asar.listPackage(arm64AsarPath, { isPack: false }).map(toRelativePath),
+  );
 
   //
   // Build set of unpacked directories and files
