@@ -101,12 +101,10 @@ describe('makeUniversalApp', () => {
       ).rejects.toThrow(/Detected unique file "extra-file\.txt"/);
     }, 60000);
 
-    it.only('should not inject ElectronAsarIntegrity into `infoPlistsToIgnore`', async () => {
+    it('should not inject ElectronAsarIntegrity into `infoPlistsToIgnore`', async () => {
       const arm64AppPath = await templateApp('Arm64-1.app', 'arm64', async (appPath) => {
         const { testPath } = await createTestApp('Arm64-1');
-        const asarOutPath = path.resolve(appsOutPath, '1.asar');
-        await createPackage(testPath, asarOutPath);
-        await fs.copy(asarOutPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
+        await createPackage(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
         await templateApp('SubApp-1.app', 'arm64', async (subArm64AppPath) => {
           await fs.move(
             subArm64AppPath,
@@ -116,9 +114,7 @@ describe('makeUniversalApp', () => {
       });
       const x64AppPath = await templateApp('X64-1.app', 'x64', async (appPath) => {
         const { testPath } = await createTestApp('X64-1');
-        const asarOutPath = path.resolve(appsOutPath, '2.asar');
-        await createPackage(testPath, asarOutPath);
-        await fs.copy(asarOutPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
+        await createPackage(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
         await templateApp('SubApp-1.app', 'x64', async (subArm64AppPath) => {
           await fs.move(
             subArm64AppPath,
@@ -131,6 +127,7 @@ describe('makeUniversalApp', () => {
         x64AppPath,
         arm64AppPath,
         outAppPath,
+        mergeASARs: true,
         infoPlistsToIgnore: 'SubApp-1.app/Contents/Info.plist',
       });
       await verifyApp(outAppPath);

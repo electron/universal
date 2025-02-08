@@ -40,14 +40,34 @@ export const verifyApp = async (
     await verifyFileTree(path.resolve(resourcesDir, dir));
   }
 
-  await verifyAsarIntegrityEntries(appPath);
+  const allFiles = await fileUtils.getAllAppFiles(appPath);
+  const infoPlists = allFiles
+    .filter(
+      (appFile) =>
+        appFile.type === fileUtils.AppFileType.INFO_PLIST &&
+        !appFile.relativePath.includes('Framework'),
+    )
+    .map((af) => af.relativePath)
+    .sort();
+
+  const integrityMap: Record<string, string> = {};
+  const integrity = await Promise.all(
+    infoPlists.map((ip) => verifyAsarIntegrityEntries(path.resolve(appPath, ip))),
+  );
+  for (let i = 0; i < integrity.length; i++) {
+    const asarIntegrity = integrity[i];
+    const relativePath = infoPlists[i];
+    integrityMap[relativePath] = asarIntegrity;
+  }
+  expect(integrityMap).toMatchSnapshot();
 };
 
-export const verifyAsarIntegrityEntries = async (appPath: string) => {
+// note: `infoPlistsToIgnore` will not have integrity in sub-app plists
+export const verifyAsarIntegrityEntries = async (infoPlist: string) => {
   const { ElectronAsarIntegrity: integrity, ...otherData } = plist.parse(
-    await fs.readFile(path.resolve(appPath, 'Contents', 'Info.plist'), 'utf-8'),
+    await fs.readFile(infoPlist, 'utf-8'),
   ) as any;
-  expect(integrity).toMatchSnapshot();
+  return integrity;
 };
 
 export const verifyHeader = async (

@@ -249,7 +249,28 @@ exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into
 }
 `;
 
-exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 2`] = `undefined`;
+exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 2`] = `
+{
+  "Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/Info.plist": undefined,
+  "Contents/Frameworks/Electron Helper (GPU).app/Contents/Info.plist": undefined,
+  "Contents/Frameworks/Electron Helper (Plugin).app/Contents/Info.plist": undefined,
+  "Contents/Frameworks/Electron Helper (Renderer).app/Contents/Info.plist": undefined,
+  "Contents/Frameworks/Electron Helper.app/Contents/Info.plist": undefined,
+  "Contents/Frameworks/Mantle.framework/Versions/A/Resources/Info.plist": undefined,
+  "Contents/Frameworks/ReactiveObjC.framework/Versions/A/Resources/Info.plist": undefined,
+  "Contents/Frameworks/Squirrel.framework/Versions/A/Resources/Info.plist": undefined,
+  "Contents/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Resources/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Helper (GPU).app/Contents/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Helper (Plugin).app/Contents/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Helper (Renderer).app/Contents/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Electron Helper.app/Contents/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Mantle.framework/Versions/A/Resources/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Frameworks/ReactiveObjC.framework/Versions/A/Resources/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Frameworks/Squirrel.framework/Versions/A/Resources/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Info.plist": undefined,
+}
+`;
 
 exports[`makeUniversalApp force packages successfully if \`out\` bundle already exists and \`force\` is \`true\` 1`] = `
 {
