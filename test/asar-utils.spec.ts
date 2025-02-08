@@ -6,7 +6,6 @@ import {
   detectAsarMode,
   generateAsarIntegrity,
   generateOrderingConfig,
-  mergeASARs,
   toRelativePath,
 } from '../src/asar-utils';
 import asar from '@electron/asar';
