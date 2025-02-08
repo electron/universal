@@ -11,6 +11,7 @@ import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
 import { AsarMode, detectAsarMode, generateAsarIntegrity, mergeASARs } from './asar-utils';
 import { sha } from './sha';
 import { d } from './debug';
+import { AsarIntegrity, computeIntegrityData } from './integrity';
 
 /**
  * Options to pass into the {@link makeUniversalApp} function.
@@ -251,8 +252,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       }
     }
 
-    const generatedIntegrity: Record<string, { algorithm: 'SHA256'; hash: string }> = {};
-    let didSplitAsar = false;
+    const generatedIntegrity: AsarIntegrity = {};
 
     /**
      * If we have an ASAR we just need to check if the two "app.asar" files have the same hash,
@@ -272,7 +272,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         singleArchFiles: opts.singleArchFiles,
       });
 
-      generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(output);
+      // generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(output);
     } else if (x64AsarMode === AsarMode.HAS_ASAR) {
       d('checking if the x64 and arm64 asars are identical');
       const x64AsarSha = await sha(path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'));
@@ -281,11 +281,11 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       );
 
       if (x64AsarSha !== arm64AsarSha) {
-        didSplitAsar = true;
         d('x64 and arm64 asars are different');
-        const x64AsarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app-x64.asar');
-        await fs.move(path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'), x64AsarPath);
-        const x64Unpacked = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar.unpacked');
+        const x64ResourcesPath = path.resolve(tmpApp, 'Contents', 'Resources');
+        const x64AsarPath = path.resolve(x64ResourcesPath, 'app-x64.asar');
+        await fs.move(path.resolve(x64ResourcesPath, 'app.asar'), x64AsarPath);
+        const x64Unpacked = path.resolve(x64ResourcesPath, 'app.asar.unpacked');
         if (await fs.pathExists(x64Unpacked)) {
           await fs.move(
             x64Unpacked,
@@ -293,7 +293,8 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
           );
         }
 
-        const arm64AsarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app-arm64.asar');
+        const arm64ResourcesPath = path.resolve(tmpApp, 'Contents', 'Resources');
+        const arm64AsarPath = path.resolve(arm64ResourcesPath, 'app-arm64.asar');
         await fs.copy(
           path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar'),
           arm64AsarPath,
@@ -327,19 +328,18 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         );
         pj.main = 'index.js';
         await fs.writeJson(path.resolve(entryAsar, 'package.json'), pj);
-        const asarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar');
+        const resourcesPath = path.resolve(tmpApp, 'Contents', 'Resources');
+        const asarPath = path.resolve(resourcesPath, 'app.asar');
         await asar.createPackage(entryAsar, asarPath);
-
-        generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(asarPath);
-        generatedIntegrity['Resources/app-x64.asar'] = generateAsarIntegrity(x64AsarPath);
-        generatedIntegrity['Resources/app-arm64.asar'] = generateAsarIntegrity(arm64AsarPath);
       } else {
         d('x64 and arm64 asars are the same');
-        generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(
-          path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
-        );
       }
     }
+
+    const generatedIntegrity = await computeIntegrityData(
+      path.join(tmpApp, 'Contents', 'Resources'),
+      'Resources',
+    );
 
     const plistFiles = x64Files.filter((f) => f.type === AppFileType.INFO_PLIST);
     for (const plistFile of plistFiles) {
