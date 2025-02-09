@@ -193,30 +193,18 @@ describe('makeUniversalApp', () => {
         const arm64AppPath = await templateApp('MultiAsarArm64.app', 'arm64', async (appPath) => {
           const { testPath } = await createTestApp('Arm64-2');
           const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
-          await createPackage(
-            testPath,
-            path.join(resourcesDir, 'app.asar'),
-          );
+          await createPackage(testPath, path.join(resourcesDir, 'app.asar'));
           const subDir = path.resolve(resourcesDir, 'app');
-          await fs.mkdir(subDir)
-          await createPackage(
-            testPath,
-            path.join(subDir, 'web.asar'),
-          );
+          await fs.mkdir(subDir);
+          await createPackage(testPath, path.join(subDir, 'web.asar'));
         });
         const x64AppPath = await templateApp('MultiAsarX64.app', 'x64', async (appPath) => {
           const { testPath } = await createTestApp('X64-2');
           const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
-          await createPackage(
-            testPath,
-            path.join(resourcesDir, 'app.asar'),
-          );
+          await createPackage(testPath, path.join(resourcesDir, 'app.asar'));
           const subDir = path.resolve(resourcesDir, 'app');
-          await fs.mkdir(subDir)
-          await createPackage(
-            testPath,
-            path.join(subDir, 'web.asar'),
-          );
+          await fs.mkdir(subDir);
+          await createPackage(testPath, path.join(subDir, 'web.asar'));
         });
         const outAppPath = path.resolve(appsOutPath, 'MultiAsar.app');
         await makeUniversalApp({
