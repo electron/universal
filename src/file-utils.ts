@@ -5,7 +5,7 @@ import * as fs from 'fs-extra';
 import { minimatch } from 'minimatch';
 import * as path from 'path';
 import { MakeUniversalOpts } from '.';
-import { generateAsarIntegrity } from './asar-utils';
+import { generateAsarIntegrity, getFileArch } from './asar-utils';
 import { d } from './debug';
 import { sha } from './sha';
 
@@ -136,6 +136,18 @@ export async function lipoMachOFiles(x64Files: AppFile[], tmpApp: string, opts: 
   for (const machOFile of x64Files.filter((f) => f.type === AppFileType.MACHO)) {
     const first = await fs.realpath(path.resolve(tmpApp, machOFile.relativePath));
     const second = await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath));
+
+    const isAlreadyUniversal = async (file: string) =>
+      (await getFileArch(file)).includes('Mach-O universal binary');
+
+    // check if both files (same name) are already universal.
+    // this must occur before checking `sha` as their sha's will be different between builds if being built locally
+    if ((await isAlreadyUniversal(first)) && (await isAlreadyUniversal(second))) {
+      d(machOFile.relativePath, `is already universal across builds, skipping lipo`);
+      knownMergedMachOFiles.add(machOFile.relativePath);
+      continue;
+    }
+
 
     const x64Sha = await sha(path.resolve(opts.x64AppPath, machOFile.relativePath));
     const arm64Sha = await sha(path.resolve(opts.arm64AppPath, machOFile.relativePath));
