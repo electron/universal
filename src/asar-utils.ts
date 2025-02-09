@@ -6,6 +6,7 @@ import path from 'path';
 import { minimatch } from 'minimatch';
 import os from 'os';
 import { d } from './debug';
+import { spawn } from '@malept/cross-spawn-promise';
 
 const LIPO = 'lipo';
 
@@ -75,6 +76,12 @@ function checkSingleArch(archive: string, file: string, allowList?: string): voi
     );
   }
 }
+
+export const getFileArch = async (filepath: string) => {
+  const result = await spawn('file', [filepath]);
+  const archStdOut = result.substring(result.indexOf(':') + 2, result.indexOf('\n'));
+  return archStdOut;
+};
 
 export const mergeASARs = async ({
   x64AsarPath,

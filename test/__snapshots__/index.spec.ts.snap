@@ -313,6 +313,52 @@ exports[`makeUniversalApp force packages successfully if \`out\` bundle already 
 }
 `;
 
+exports[`makeUniversalApp no asar mode identical app dirs with different macho files (e.g. do not shim, but still lipo) 1`] = `
+[
+  "index.js",
+  {
+    "arch": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit bundle x86_64] [arm64:Mach-O 64-bit bundle arm64]",
+    "name": "node-mac-permissions.node",
+  },
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+]
+`;
+
+exports[`makeUniversalApp no asar mode identical app dirs with different macho files (e.g. do not shim, but still lipo) 2`] = `
+{
+  "Contents/Info.plist": {},
+}
+`;
+
+exports[`makeUniversalApp no asar mode identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir) 1`] = `
+[
+  "index.js",
+  {
+    "arch": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit bundle x86_64] [arm64:Mach-O 64-bit bundle arm64]",
+    "name": "node-mac-permissions.node",
+  },
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+]
+`;
+
+exports[`makeUniversalApp no asar mode identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir) 2`] = `
+{
+  "Contents/Info.plist": {},
+}
+`;
+
 exports[`makeUniversalApp no asar mode should correctly merge two identical app folders 1`] = `
 [
   "index.js",
@@ -406,5 +452,54 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 4`]
 exports[`makeUniversalApp no asar mode should shim two different app folders 5`] = `
 {
   "Contents/Info.plist": {},
+}
+`;
+
+exports[`makeUniversalApp works for lipo binary resources 1`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+        ],
+        "hash": "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+      },
+      "size": 64,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp works for lipo binary resources 2`] = `
+[
+  {
+    "arch": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit bundle x86_64] [arm64:Mach-O 64-bit bundle arm64]",
+    "name": "node-mac-permissions.node",
+  },
+]
+`;
+
+exports[`makeUniversalApp works for lipo binary resources 3`] = `
+{
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
+    },
+  },
 }
 `;

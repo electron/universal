@@ -6,6 +6,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
+import * as asarUtils from '../dist/cjs/asar-utils';
 
 export const asarsDir = path.resolve(__dirname, 'fixtures', 'asars');
 export const appsDir = path.resolve(__dirname, 'fixtures', 'apps');
@@ -69,14 +70,18 @@ const extractAsarIntegrity = async (infoPlist: string) => {
 
 export const verifyFileTree = async (dirPath: string) => {
   const dirFiles = await fileUtils.getAllAppFiles(dirPath);
-  const files = dirFiles.map((file) => {
-    const it = path.join(dirPath, file.relativePath);
-    const name = toSystemIndependentPath(file.relativePath);
-    if (it.endsWith('.txt') || it.endsWith('.json')) {
-      return { name, content: fs.readFileSync(it, 'utf-8') };
-    }
-    return name;
-  });
+  const files = await Promise.all(
+    dirFiles.map(async (file) => {
+      const it = path.join(dirPath, file.relativePath);
+      const name = toSystemIndependentPath(file.relativePath);
+      if (it.endsWith('.txt') || it.endsWith('.json')) {
+        return { name, content: await fs.readFile(it, 'utf-8') };
+      } else if (it.endsWith('.node')) {
+        return { name, arch: await asarUtils.getFileArch(it) };
+      }
+      return name;
+    }),
+  );
   expect(files).toMatchSnapshot();
 };
 

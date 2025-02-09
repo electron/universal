@@ -5,8 +5,23 @@ import { makeUniversalApp } from '../dist/cjs/index';
 import { createTestApp, templateApp, verifyApp } from './util';
 import { createPackage } from '@electron/asar';
 
+const nativeModulesPath = path.resolve(__dirname, 'fixtures', 'native');
 const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
 const appsOutPath = path.resolve(__dirname, 'fixtures', 'apps', 'out');
+
+const generateNativeApp = async (testName: string, appName: string, arch: string) => {
+  const appPath = path.resolve(appsOutPath, `${testName}-${appName}`);
+  await fs.copy(path.resolve(appsPath, appName), appPath);
+  const resourcesApp = path.join(appPath, 'Contents', 'Resources', 'app');
+  if (!fs.existsSync(resourcesApp)) {
+    await fs.mkdir(resourcesApp);
+  }
+  await fs.copy(
+    path.join(nativeModulesPath, `node-mac-permissions.${arch}.node`),
+    path.join(resourcesApp, 'node-mac-permissions.node'),
+  );
+  return appPath;
+};
 
 // See `jest.setup.ts` for app fixture setup process
 describe('makeUniversalApp', () => {
@@ -27,7 +42,14 @@ describe('makeUniversalApp', () => {
     );
   });
 
-  it.todo('works for lipo binary resources');
+  it('works for lipo binary resources', async () => {
+    const x64AppPath = await generateNativeApp('Lipo', 'X64Asar.app', 'x64');
+    const arm64AppPath = await generateNativeApp('Lipo', 'Arm64Asar.app', 'arm64');
+
+    const out = path.resolve(appsOutPath, 'Lipo.app');
+    await makeUniversalApp({ x64AppPath, arm64AppPath, outAppPath: out, mergeASARs: true });
+    await verifyApp(out);
+  }, 60000);
 
   describe('force', () => {
     it('throws an error if `out` bundle already exists and `force` is `false`', async () => {
@@ -43,7 +65,7 @@ describe('makeUniversalApp', () => {
     });
 
     it('packages successfully if `out` bundle already exists and `force` is `true`', async () => {
-      const out = path.resolve(appsOutPath, 'Error.app');
+      const out = path.resolve(appsOutPath, 'NoError.app');
       await fs.mkdirp(out);
       await makeUniversalApp({
         x64AppPath: path.resolve(appsPath, 'X64Asar.app'),
@@ -166,9 +188,31 @@ describe('makeUniversalApp', () => {
       });
       await verifyApp(outAppPath);
     }, 60000);
-  });
 
-  // TODO: Add tests for
-  // * different app dirs with different macho files
-  // * identical app dirs with universal macho files
+    it('identical app dirs with different macho files (e.g. do not shim, but still lipo)', async () => {
+      const x64AppPath = await generateNativeApp('DifferentMachoApp', 'X64NoAsar.app', 'x64');
+      const arm64AppPath = await generateNativeApp('DifferentMachoApp', 'Arm64NoAsar.app', 'arm64');
+
+      const out = path.resolve(appsOutPath, 'DifferentMachoApp.app');
+      await makeUniversalApp({
+        x64AppPath,
+        arm64AppPath,
+        outAppPath: out,
+      });
+      await verifyApp(out);
+    }, 60000);
+
+    it('identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir)', async () => {
+      const x64AppPath = await generateNativeApp('UniversalMachoApp', 'X64NoAsar.app', 'universal');
+      const arm64AppPath = await generateNativeApp(
+        'UniversalMachoApp',
+        'Arm64NoAsar.app',
+        'universal',
+      );
+
+      const out = path.resolve(appsOutPath, 'UniversalMachoApp.app');
+      await makeUniversalApp({ x64AppPath, arm64AppPath, outAppPath: out });
+      await verifyApp(out);
+    }, 60000);
+  });
 });

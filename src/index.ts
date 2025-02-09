@@ -8,7 +8,13 @@ import * as plist from 'plist';
 import * as dircompare from 'dir-compare';
 
 import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
-import { AsarMode, detectAsarMode, generateAsarIntegrity, mergeASARs } from './asar-utils';
+import {
+  AsarMode,
+  detectAsarMode,
+  generateAsarIntegrity,
+  getFileArch,
+  mergeASARs,
+} from './asar-utils';
 import { sha } from './sha';
 import { d } from './debug';
 
@@ -160,6 +166,17 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
     for (const machOFile of x64Files.filter((f) => f.type === AppFileType.MACHO)) {
       const first = await fs.realpath(path.resolve(tmpApp, machOFile.relativePath));
       const second = await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath));
+
+      const isAlreadyUniversal = async (file: string) =>
+        (await getFileArch(file)).includes('Mach-O universal binary');
+
+      // check if both files (same name) are already universal.
+      // this must occur before checking `sha` as their sha's will be different between builds if being built locally
+      if ((await isAlreadyUniversal(first)) && (await isAlreadyUniversal(second))) {
+        d(machOFile.relativePath, `is already universal across builds, skipping lipo`);
+        knownMergedMachOFiles.add(machOFile.relativePath);
+        continue;
+      }
 
       const x64Sha = await sha(path.resolve(opts.x64AppPath, machOFile.relativePath));
       const arm64Sha = await sha(path.resolve(opts.arm64AppPath, machOFile.relativePath));
