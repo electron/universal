@@ -1,5 +1,84 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`makeUniversalApp asar mode should also inject ElectronAsarIntegrity for additional user-provided asars 1`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+        ],
+        "hash": "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+      },
+      "size": 66,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+    "private": {
+      "files": {
+        "var": {
+          "files": {
+            "app": {
+              "files": {
+                "file.txt": {
+                  "link": "private/var/file.txt",
+                },
+              },
+            },
+            "file.txt": {
+              "integrity": {
+                "algorithm": "SHA256",
+                "blockSize": 4194304,
+                "blocks": [
+                  "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+                ],
+                "hash": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+              },
+              "size": 11,
+            },
+          },
+        },
+      },
+    },
+    "var": {
+      "link": "private/var",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should also inject ElectronAsarIntegrity for additional user-provided asars 2`] = `
+[
+  "web.asar",
+]
+`;
+
+exports[`makeUniversalApp asar mode should also inject ElectronAsarIntegrity for additional user-provided asars 3`] = `
+{
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "7e6af4d00f4cc737eff922e2b386128a269f80887b79a011022f1276bdbe7832",
+    },
+    "Resources/app/web.asar": {
+      "algorithm": "SHA256",
+      "hash": "7e6af4d00f4cc737eff922e2b386128a269f80887b79a011022f1276bdbe7832",
+    },
+  },
+}
+`;
+
 exports[`makeUniversalApp asar mode should correctly merge two identical asars 1`] = `
 {
   "files": {

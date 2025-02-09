@@ -10,7 +10,6 @@ import {
   templateApp,
   VERIFY_APP_TIMEOUT,
   verifyApp,
-  asarsDir,
 } from './util';
 import { createPackage } from '@electron/asar';
 
@@ -192,15 +191,31 @@ describe('makeUniversalApp', () => {
       'should also inject ElectronAsarIntegrity for additional user-provided asars',
       async () => {
         const arm64AppPath = await templateApp('MultiAsarArm64.app', 'arm64', async (appPath) => {
-          await fs.copy(
-            path.resolve(asarsDir, 'app.asar'),
-            path.resolve(appPath, 'Contents', 'Resources', 'web.asar'),
+          const { testPath } = await createTestApp('Arm64-2');
+          const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
+          await createPackage(
+            testPath,
+            path.join(resourcesDir, 'app.asar'),
+          );
+          const subDir = path.resolve(resourcesDir, 'app');
+          await fs.mkdir(subDir)
+          await createPackage(
+            testPath,
+            path.join(subDir, 'web.asar'),
           );
         });
         const x64AppPath = await templateApp('MultiAsarX64.app', 'x64', async (appPath) => {
-          await fs.copy(
-            path.resolve(asarsDir, 'app.asar'),
-            path.resolve(appPath, 'Contents', 'Resources', 'web.asar'),
+          const { testPath } = await createTestApp('X64-2');
+          const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
+          await createPackage(
+            testPath,
+            path.join(resourcesDir, 'app.asar'),
+          );
+          const subDir = path.resolve(resourcesDir, 'app');
+          await fs.mkdir(subDir)
+          await createPackage(
+            testPath,
+            path.join(subDir, 'web.asar'),
           );
         });
         const outAppPath = path.resolve(appsOutPath, 'MultiAsar.app');
