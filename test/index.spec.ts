@@ -10,6 +10,7 @@ import {
   templateApp,
   VERIFY_APP_TIMEOUT,
   verifyApp,
+  asarsDir,
 } from './util';
 import { createPackage } from '@electron/asar';
 
@@ -191,17 +192,15 @@ describe('makeUniversalApp', () => {
       'should also inject ElectronAsarIntegrity for additional user-provided asars',
       async () => {
         const arm64AppPath = await templateApp('MultiAsarArm64.app', 'arm64', async (appPath) => {
-          const { testPath } = await createTestApp('Arm64-2');
-          await createPackage(
-            testPath,
-            path.resolve(appPath, 'Contents', 'Resources', 'webapp.asar'),
+          await fs.copy(
+            path.resolve(asarsDir, 'app.asar'),
+            path.resolve(appPath, 'Contents', 'Resources', 'web.asar'),
           );
         });
         const x64AppPath = await templateApp('MultiAsarX64.app', 'x64', async (appPath) => {
-          const { testPath } = await createTestApp('X64-2');
-          await createPackage(
-            testPath,
-            path.resolve(appPath, 'Contents', 'Resources', 'webapp.asar'),
+          await fs.copy(
+            path.resolve(asarsDir, 'app.asar'),
+            path.resolve(appPath, 'Contents', 'Resources', 'web.asar'),
           );
         });
         const outAppPath = path.resolve(appsOutPath, 'MultiAsar.app');
