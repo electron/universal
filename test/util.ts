@@ -8,6 +8,9 @@ import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
 import * as asarUtils from '../dist/cjs/asar-utils';
 
+// We do a LOT of verifications in `verifyApp` 😅
+// exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
+// plus some tests create fixtures at runtime
 export const VERIFY_APP_TIMEOUT = 80000;
 
 export const nativeModulesPath = path.resolve(__dirname, 'fixtures', 'native');
@@ -124,12 +127,11 @@ export function removeUnstableProperties(data: any) {
  * ├── index.js
  * ├── package.json
  */
-let counter = 0;
 export const createTestApp = async (
   testName: string,
   additionalFiles: Record<string, string> = {},
 ) => {
-  const outDir = testName || 'app-' + counter++;
+  const outDir = testName || 'app-' + Math.floor(Math.random() * 100);
   const testPath = path.join(appsDir, outDir);
   await fs.remove(testPath);
 

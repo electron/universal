@@ -6,8 +6,9 @@ import { MakeUniversalOpts } from '.';
 import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
 import { readdir } from 'fs-extra';
 import { sha } from './sha';
+import { generateAsarIntegrity } from './asar-utils';
 
-type IntegrityMap = {
+type AsarMap = {
   [filepath: string]: string;
 };
 
@@ -23,7 +24,7 @@ export interface AsarIntegrity {
 export async function injectAsarIntegrity(
   x64Files: AppFile[],
   opts: MakeUniversalOpts,
-  generatedIntegrity: Record<string, { algorithm: 'SHA256'; hash: string }>,
+  generatedIntegrity: AsarIntegrity,
   tmpApp: string,
 ) {
   const plistFiles = x64Files.filter((f) => f.type === AppFileType.INFO_PLIST);
@@ -55,27 +56,27 @@ export async function injectAsarIntegrity(
 }
 
 export async function computeIntegrityData(contentsPath: string): Promise<AsarIntegrity> {
+  const root = await fs.realpath(contentsPath);
+
   const resourcesRelativePath = 'Resources';
-  const resourcesPath = path.join(contentsPath, resourcesRelativePath);
+  const resourcesPath = path.resolve(root, resourcesRelativePath);
   const resources = await getAllAppFiles(resourcesPath);
+
   const resourceAsars = resources
     .filter((file) => file.type === AppFileType.APP_CODE)
-    .reduce<IntegrityMap>(
-      (prev, file) => ({
-        ...prev,
-        [path.join(resourcesRelativePath, file.relativePath)]: path.join(
-          resourcesPath,
-          file.relativePath,
-        ),
-      }),
-      {},
-    );
+    .reduce<AsarMap>((prev, file) => {
+      const key = path.join(resourcesRelativePath, file.relativePath);
+      const value = path.resolve(resourcesPath, file.relativePath);
+      return { ...prev, [key]: value };
+    }, {});
 
   // sort to produce constant result
   const allAsars = Object.entries(resourceAsars).sort(([name1], [name2]) =>
     name1.localeCompare(name2),
   );
-  const hashes = await Promise.all(allAsars.map(async ([, from]) => sha(from)));
+  const hashes: HeaderHash[] = await Promise.all(
+    allAsars.map(async ([, from]) => generateAsarIntegrity(from)),
+  );
   const asarIntegrity: AsarIntegrity = {};
   for (let i = 0; i < allAsars.length; i++) {
     const [asar] = allAsars[i];

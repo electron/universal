@@ -156,7 +156,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       }
     }
 
-    const generatedIntegrity = await computeIntegrityData(path.join(tmpApp, 'Contents'));
+    const generatedIntegrity = await computeIntegrityData(path.resolve(tmpApp, 'Contents'));
 
     await injectAsarIntegrity(x64Files, opts, generatedIntegrity, tmpApp);
 

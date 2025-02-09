@@ -186,6 +186,35 @@ describe('makeUniversalApp', () => {
       },
       VERIFY_APP_TIMEOUT,
     );
+
+    it(
+      'should also inject ElectronAsarIntegrity for additional user-provided asars',
+      async () => {
+        const arm64AppPath = await templateApp('MultiAsarArm64.app', 'arm64', async (appPath) => {
+          const { testPath } = await createTestApp('Arm64-2');
+          await createPackage(
+            testPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'webapp.asar'),
+          );
+        });
+        const x64AppPath = await templateApp('MultiAsarX64.app', 'x64', async (appPath) => {
+          const { testPath } = await createTestApp('X64-2');
+          await createPackage(
+            testPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'webapp.asar'),
+          );
+        });
+        const outAppPath = path.resolve(appsOutPath, 'MultiAsar.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
+          mergeASARs: true,
+        });
+        await verifyApp(outAppPath);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
   });
 
   describe('no asar mode', () => {
