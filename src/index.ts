@@ -15,7 +15,7 @@ import {
 import { AsarMode, detectAsarMode, generateAsarIntegrity, mergeASARs } from './asar-utils';
 import { sha } from './sha';
 import { d } from './debug';
-import { AsarIntegrity, injectAsarIntegrity } from './integrity';
+import { AsarIntegrity, computeIntegrityData, injectAsarIntegrity } from './integrity';
 
 /**
  * Options to pass into the {@link makeUniversalApp} function.
@@ -133,8 +133,6 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       await mergeAppFiles(tmpApp, opts, knownMergedMachOFiles, tmpDir);
     }
 
-    const generatedIntegrity: AsarIntegrity = {};
-
     /**
      * If we have an ASAR we just need to check if the two "app.asar" files have the same hash,
      * if they are, same as above, we can leave one there and call it a day.  If they're different
@@ -153,12 +151,12 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
           outputAsarPath: output,
           singleArchFiles: opts.singleArchFiles,
         });
-
-        generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(output);
       } else {
-        await copyAndShimAsarIfNeeded(tmpApp, opts, tmpDir, generatedIntegrity);
+        await copyAndShimAsarIfNeeded(tmpApp, opts, tmpDir);
       }
     }
+
+    const generatedIntegrity = await computeIntegrityData(path.join(tmpApp, 'Contents'));
 
     await injectAsarIntegrity(x64Files, opts, generatedIntegrity, tmpApp);
 

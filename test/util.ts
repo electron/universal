@@ -8,8 +8,12 @@ import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
 import * as asarUtils from '../dist/cjs/asar-utils';
 
-export const asarsDir = path.resolve(__dirname, 'fixtures', 'asars');
+export const VERIFY_APP_TIMEOUT = 80000;
+
+export const nativeModulesPath = path.resolve(__dirname, 'fixtures', 'native');
 export const appsDir = path.resolve(__dirname, 'fixtures', 'apps');
+export const asarsDir = path.resolve(__dirname, 'fixtures', 'asars');
+export const appsOutPath = path.resolve(__dirname, 'fixtures', 'apps', 'out');
 
 export const verifyApp = async (appPath: string) => {
   await ensureUniversal(appPath);

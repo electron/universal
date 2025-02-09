@@ -52,7 +52,7 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
           throw e;
         }
       }
-      if (p.includes('app.asar')) {
+      if (p.endsWith('.asar')) {
         fileType = AppFileType.APP_CODE;
       } else if (fileOutput.startsWith(MACHO_PREFIX)) {
         fileType = AppFileType.MACHO;
@@ -148,7 +148,6 @@ export async function lipoMachOFiles(x64Files: AppFile[], tmpApp: string, opts: 
       continue;
     }
 
-
     const x64Sha = await sha(path.resolve(opts.x64AppPath, machOFile.relativePath));
     const arm64Sha = await sha(path.resolve(opts.arm64AppPath, machOFile.relativePath));
     if (x64Sha === arm64Sha) {
@@ -205,7 +204,6 @@ export async function copyAndShimAsarIfNeeded(
   tmpApp: string,
   opts: MakeUniversalOpts,
   tmpDir: string,
-  generatedIntegrity: Record<string, { algorithm: 'SHA256'; hash: string }>,
 ) {
   d('checking if the x64 and arm64 asars are identical');
   const x64AsarSha = await sha(path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'));
@@ -262,15 +260,10 @@ export async function copyAndShimAsarIfNeeded(
     const asarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar');
     await asar.createPackage(entryAsar, asarPath);
 
-    generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(asarPath);
-    generatedIntegrity['Resources/app-x64.asar'] = generateAsarIntegrity(x64AsarPath);
-    generatedIntegrity['Resources/app-arm64.asar'] = generateAsarIntegrity(arm64AsarPath);
     return true;
   }
 
   d('x64 and arm64 asars are the same');
-  generatedIntegrity['Resources/app.asar'] = generateAsarIntegrity(
-    path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar'),
-  );
+
   return false;
 }
