@@ -161,13 +161,11 @@ export const templateApp = async (
   arch: string,
   modify: (appPath: string) => Promise<void>,
 ) => {
-  const cacheRoot = process.env.UNIVERSAL_CACHE_ROOT;
   const electronZip = await downloadArtifact({
     artifactName: 'electron',
     version: '27.0.0',
     platform: 'darwin',
     arch,
-    cacheRoot,
   });
   const appPath = path.resolve(appsDir, name);
   zip.unzipSync(electronZip, appsDir);
