@@ -29,14 +29,17 @@ export const verifyApp = async (appPath: string) => {
     expect(removeUnstableProperties(asarFs.header)).toMatchSnapshot();
   }
 
-  // check all app and unpacked dirs
+  // check all app and unpacked dirs (incl. shimmed)
+  const dirsToSnapshot = [
+    'app',
+    'app.asar.unpacked',
+    'app-x64',
+    'app-x64.asar.unpacked',
+    'app-arm64',
+    'app-arm64.asar.unpacked',
+  ];
   const appDirs = resourcesDirContents
-    .filter(
-      (p) =>
-        !path.basename(p).endsWith('.asar') &&
-        path.basename(p).includes('app') && // it's an app dir
-        !p.endsWith('.app'), // but we don't want any sub-apps (Something.app)
-    )
+    .filter((p) => dirsToSnapshot.includes(path.basename(p)))
     .sort();
   for await (const dir of appDirs) {
     await verifyFileTree(path.resolve(resourcesDir, dir));
@@ -47,7 +50,8 @@ export const verifyApp = async (appPath: string) => {
     .filter(
       (appFile) =>
         appFile.type === fileUtils.AppFileType.INFO_PLIST &&
-        !appFile.relativePath.includes('Framework'),
+        // These are test app fixtures, no need to snapshot within `TestApp.app/Contents/Frameworks`
+        !appFile.relativePath.includes(path.join('Contents', 'Frameworks')),
     )
     .map((af) => af.relativePath)
     .sort();
@@ -93,11 +97,11 @@ export const ensureUniversal = async (app: string) => {
   expect(result2).toContain('x64');
 };
 
-export function toSystemIndependentPath(s: string): string {
+export const toSystemIndependentPath = (s: string): string => {
   return path.sep === '/' ? s : s.replace(/\\/g, '/');
-}
+};
 
-export function removeUnstableProperties(data: any) {
+export const removeUnstableProperties = (data: any) => {
   return JSON.parse(
     JSON.stringify(data, (name, value) => {
       if (name === 'offset') {
@@ -106,7 +110,7 @@ export function removeUnstableProperties(data: any) {
       return value;
     }),
   );
-}
+};
 
 /**
  * Directory structure:
@@ -120,12 +124,11 @@ export function removeUnstableProperties(data: any) {
  * ├── index.js
  * ├── package.json
  */
-let counter = 0;
 export const createTestApp = async (
-  testName: string,
+  testName: string | undefined,
   additionalFiles: Record<string, string> = {},
 ) => {
-  const outDir = testName || 'app-' + counter++;
+  const outDir = (testName || 'app') + Math.floor(Math.random() * 100); // tests run in parallel, randomize dir suffix to prevent naming collisions
   const testPath = path.join(appsDir, outDir);
   await fs.remove(testPath);
 
