@@ -5,11 +5,7 @@
     "outDir": "dist/esm",
     "types": [
       "jest"
-    ],
-    "typeRoots": [
-      "typings",
-      "node_modules/@types"
     ]
   },
-  "include": ["src", "**/*.d.ts"]
+  "include": ["src"]
 }
