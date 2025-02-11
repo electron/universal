@@ -1,28 +1,6 @@
-import { downloadArtifact } from '@electron/get';
-import * as zip from 'cross-zip';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-
-const asarsDir = path.resolve(__dirname, 'test', 'fixtures', 'asars');
-const appsDir = path.resolve(__dirname, 'test', 'fixtures', 'apps');
-
-const templateApp = async (
-  name: string,
-  arch: string,
-  modify: (appPath: string) => Promise<void>,
-) => {
-  const electronZip = await downloadArtifact({
-    artifactName: 'electron',
-    version: '27.0.0',
-    platform: 'darwin',
-    arch,
-  });
-  const appPath = path.resolve(appsDir, name);
-  zip.unzipSync(electronZip, appsDir);
-  await fs.rename(path.resolve(appsDir, 'Electron.app'), appPath);
-  await fs.remove(path.resolve(appPath, 'Contents', 'Resources', 'default_app.asar'));
-  await modify(appPath);
-};
+import { appsDir, asarsDir, templateApp } from './test/util';
 
 export default async () => {
   await fs.remove(appsDir);
