@@ -1,4 +1,3 @@
-import { readArchiveHeaderSync } from '@electron/asar/lib/disk';
 import { downloadArtifact } from '@electron/get';
 import { spawn } from '@malept/cross-spawn-promise';
 import * as zip from 'cross-zip';
@@ -6,6 +5,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
+import { getRawHeader } from '@electron/asar';
 
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
@@ -25,7 +25,7 @@ export const verifyApp = async (appPath: string) => {
   const asars = resourcesDirContents.filter((p) => p.endsWith('.asar')).sort();
   for await (const asar of asars) {
     // verify header
-    const asarFs = readArchiveHeaderSync(path.resolve(resourcesDir, asar));
+    const asarFs = getRawHeader(path.resolve(resourcesDir, asar));
     expect(removeUnstableProperties(asarFs.header)).toMatchSnapshot();
   }
 
