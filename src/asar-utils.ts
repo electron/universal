@@ -6,6 +6,7 @@ import path from 'path';
 import { minimatch } from 'minimatch';
 import os from 'os';
 import { d } from './debug';
+import { ExitCodeError, spawn } from '@malept/cross-spawn-promise';
 
 const LIPO = 'lipo';
 
@@ -75,6 +76,25 @@ function checkSingleArch(archive: string, file: string, allowList?: string): voi
     );
   }
 }
+
+export const getFileArch = async (filepath: string) => {
+  let fileOutput = '';
+  try {
+    fileOutput = await spawn('file', ['--brief', '--no-pad', filepath]);
+  } catch (e) {
+    if (e instanceof ExitCodeError) {
+      /* silently accept error codes from "file" */
+    } else {
+      throw e;
+    }
+  }
+  const multiLineIndex = fileOutput.indexOf('\n');
+  const archStdOut = fileOutput.substring(
+    fileOutput.indexOf(':') + 1,
+    multiLineIndex > -1 ? multiLineIndex : undefined,
+  );
+  return archStdOut;
+};
 
 export const mergeASARs = async ({
   x64AsarPath,

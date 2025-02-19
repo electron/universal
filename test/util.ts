@@ -12,8 +12,11 @@ import { getRawHeader } from '@electron/asar';
 // plus some tests create fixtures at runtime
 export const VERIFY_APP_TIMEOUT = 80 * 1000;
 
-export const asarsDir = path.resolve(__dirname, 'fixtures', 'asars');
-export const appsDir = path.resolve(__dirname, 'fixtures', 'apps');
+const fixtureDir = path.resolve(__dirname, 'fixtures');
+export const asarsDir = path.resolve(fixtureDir, 'asars');
+export const appsDir = path.resolve(fixtureDir, 'apps');
+export const appsOutPath = path.resolve(appsDir, 'out');
+const nativeModulesPath = path.resolve(fixtureDir, 'native');
 
 export const verifyApp = async (appPath: string) => {
   await ensureUniversal(appPath);
@@ -176,5 +179,19 @@ export const templateApp = async (
   await fs.remove(path.resolve(appPath, 'Contents', 'Resources', 'default_app.asar'));
   await modify(appPath);
 
+  return appPath;
+};
+
+export const generateNativeApp = async (testName: string, appName: string, arch: string) => {
+  const appPath = path.resolve(appsOutPath, `${testName}-${appName}`);
+  await fs.copy(path.resolve(appsDir, appName), appPath);
+  const resourcesApp = path.join(appPath, 'Contents', 'Resources', 'app');
+  if (!fs.existsSync(resourcesApp)) {
+    await fs.mkdir(resourcesApp);
+  }
+  await fs.copy(
+    path.join(nativeModulesPath, `node-mac-permissions.${arch}.node`),
+    path.join(resourcesApp, 'node-mac-permissions.node'),
+  );
   return appPath;
 };
