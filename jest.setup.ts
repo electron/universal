@@ -1,10 +1,10 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { appsDir, asarsDir, templateApp } from './test/util';
+import { appsPath, asarsDir, templateApp } from './test/util';
 
 export default async () => {
-  await fs.remove(appsDir);
-  await fs.mkdirp(appsDir);
+  await fs.remove(appsPath);
+  await fs.mkdirp(appsPath);
   await templateApp('Arm64Asar.app', 'arm64', async (appPath) => {
     await fs.copy(
       path.resolve(asarsDir, 'app.asar'),

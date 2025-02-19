@@ -2,11 +2,15 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import { makeUniversalApp } from '../dist/cjs/index';
-import { createTestApp, templateApp, VERIFY_APP_TIMEOUT, verifyApp } from './util';
+import {
+  appsPath,
+  appsOutPath,
+  createTestApp,
+  templateApp,
+  VERIFY_APP_TIMEOUT,
+  verifyApp,
+} from './util';
 import { createPackage } from '@electron/asar';
-
-const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
-const appsOutPath = path.resolve(__dirname, 'fixtures', 'apps', 'out');
 
 // See `jest.setup.ts` for app fixture setup process
 describe('makeUniversalApp', () => {
@@ -151,6 +155,44 @@ describe('makeUniversalApp', () => {
           outAppPath,
           mergeASARs: true,
           infoPlistsToIgnore: 'SubApp-1.app/Contents/Info.plist',
+        });
+        await verifyApp(outAppPath);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+    it(
+      'should generate AsarIntegrity for all asars in the application',
+      async () => {
+        const { testPath } = await createTestApp('app-2');
+        const testAsarPath = path.resolve(appsOutPath, 'app-2.asar');
+        await createPackage(testPath, testAsarPath);
+
+        const arm64AppPath = await templateApp('Arm64-2.app', 'arm64', async (appPath) => {
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+          );
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'webapp.asar'),
+          );
+        });
+        const x64AppPath = await templateApp('X64-2.app', 'x64', async (appPath) => {
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+          );
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'webbapp.asar'),
+          );
+        });
+        const outAppPath = path.resolve(appsOutPath, 'MultipleAsars.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
+          mergeASARs: true,
         });
         await verifyApp(outAppPath);
       },
