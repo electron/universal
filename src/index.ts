@@ -1,22 +1,22 @@
-import { spawn } from '@malept/cross-spawn-promise';
 import * as asar from '@electron/asar';
+import { spawn } from '@malept/cross-spawn-promise';
+import * as dircompare from 'dir-compare';
 import * as fs from 'fs-extra';
 import { minimatch } from 'minimatch';
 import * as os from 'os';
 import * as path from 'path';
 import * as plist from 'plist';
-import * as dircompare from 'dir-compare';
 
-import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
 import {
   AsarMode,
   detectAsarMode,
   generateAsarIntegrity,
-  getFileArch,
+  isUniversalMachO,
   mergeASARs,
 } from './asar-utils';
-import { sha } from './sha';
 import { d } from './debug';
+import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
+import { sha } from './sha';
 
 /**
  * Options to pass into the {@link makeUniversalApp} function.
@@ -167,12 +167,12 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       const first = await fs.realpath(path.resolve(tmpApp, machOFile.relativePath));
       const second = await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath));
 
-      const isAlreadyUniversal = async (file: string) =>
-        (await getFileArch(file)).includes('Mach-O universal binary');
-
       // check if both files (same name) are already universal.
       // this must occur before checking `sha` as their sha's will be different between builds if being built locally
-      if ((await isAlreadyUniversal(first)) && (await isAlreadyUniversal(second))) {
+      if (
+        isUniversalMachO(await fs.readFile(first)) &&
+        isUniversalMachO(await fs.readFile(second))
+      ) {
         d(machOFile.relativePath, `is already universal across builds, skipping lipo`);
         knownMergedMachOFiles.add(machOFile.relativePath);
         continue;

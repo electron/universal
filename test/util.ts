@@ -5,7 +5,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
-import { getRawHeader } from '@electron/asar';
+import { createPackage, getRawHeader } from '@electron/asar';
 
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
@@ -182,16 +182,32 @@ export const templateApp = async (
   return appPath;
 };
 
-export const generateNativeApp = async (testName: string, appName: string, arch: string) => {
-  const appPath = path.resolve(appsOutPath, `${testName}-${appName}`);
-  await fs.copy(path.resolve(appsDir, appName), appPath);
-  const resourcesApp = path.join(appPath, 'Contents', 'Resources', 'app');
-  if (!fs.existsSync(resourcesApp)) {
-    await fs.mkdir(resourcesApp);
-  }
-  await fs.copy(
-    path.join(nativeModulesPath, `node-mac-permissions.${arch}.node`),
-    path.join(resourcesApp, 'node-mac-permissions.node'),
-  );
+export const generateNativeApp = async (
+  appNameWithExtension: string,
+  arch: string,
+  createAsar: boolean,
+  nativeModuleArch = arch,
+  additionalFiles?: Record<string, string>,
+) => {
+  const appPath = await templateApp(appNameWithExtension, arch, async (appPath) => {
+    const resources = path.join(appPath, 'Contents', 'Resources');
+    const resourcesApp = path.resolve(resources, 'app');
+    if (!fs.existsSync(resourcesApp)) {
+      await fs.mkdir(resourcesApp);
+    }
+    const { testPath } = await createTestApp(
+      path.basename(appNameWithExtension, '.app'),
+      additionalFiles,
+    );
+    if (createAsar) {
+      await createPackage(testPath, path.resolve(resources, 'app.asar'));
+    } else {
+      await fs.copy(testPath, resourcesApp);
+    }
+    await fs.copy(
+      path.join(nativeModulesPath, `node-mac-permissions.${nativeModuleArch}.node`),
+      path.join(resourcesApp, 'node-mac-permissions.node'),
+    );
+  });
   return appPath;
 };

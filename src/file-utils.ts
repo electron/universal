@@ -1,6 +1,6 @@
+import { spawn, ExitCodeError } from '@malept/cross-spawn-promise';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { getFileArch } from './asar-utils';
 
 const MACHO_PREFIX = 'Mach-O ';
 
@@ -35,9 +35,19 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
     if (info.isFile()) {
       let fileType = AppFileType.PLAIN;
 
+      var fileOutput = '';
+      try {
+        fileOutput = await spawn('file', ['--brief', '--no-pad', p]);
+      } catch (e) {
+        if (e instanceof ExitCodeError) {
+          /* silently accept error codes from "file" */
+        } else {
+          throw e;
+        }
+      }
       if (p.includes('app.asar')) {
         fileType = AppFileType.APP_CODE;
-      } else if ((await getFileArch(p)).startsWith(MACHO_PREFIX)) {
+      } else if (fileOutput.startsWith(MACHO_PREFIX)) {
         fileType = AppFileType.MACHO;
       } else if (p.endsWith('.bin')) {
         fileType = AppFileType.SNAPSHOT;
