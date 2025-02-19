@@ -250,6 +250,39 @@ describe('makeUniversalApp', () => {
     );
 
     it(
+      "different app dirs with universal macho files (shim but don't lipo)",
+      async () => {
+        const x64AppPath = await generateNativeApp(
+          'DifferentButUniversalMachoAppX64-2.app',
+          'x64',
+          false,
+          'universal',
+          {
+            'hello-world.bin': 'Hello World',
+          },
+        );
+        const arm64AppPath = await generateNativeApp(
+          'DifferentButUniversalMachoAppArm64-2.app',
+          'arm64',
+          false,
+          'universal',
+          {
+            'i-aint-got-no-rhythm.bin': 'boomshakalaka',
+          },
+        );
+
+        const outAppPath = path.resolve(appsOutPath, 'DifferentButUniversalMachoApp.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
+        });
+        await verifyApp(outAppPath);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+
+    it(
       'identical app dirs with different macho files (e.g. do not shim, but still lipo)',
       async () => {
         const x64AppPath = await generateNativeApp('DifferentMachoAppX64-2.app', 'x64', false);
