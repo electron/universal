@@ -1,0 +1,410 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`makeUniversalApp asar mode should correctly merge two identical asars 1`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+        ],
+        "hash": "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+      },
+      "size": 64,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should correctly merge two identical asars 2`] = `
+{
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should create a shim if asars are different between architectures 1`] = `
+{
+  "files": {
+    "extra-file.txt": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "b8f261b95f81761658c8875b33a68001d8750fd898f447373bf6347e779bc3de",
+        ],
+        "hash": "b8f261b95f81761658c8875b33a68001d8750fd898f447373bf6347e779bc3de",
+      },
+      "size": 15,
+    },
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+        ],
+        "hash": "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+      },
+      "size": 64,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should create a shim if asars are different between architectures 2`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+        ],
+        "hash": "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+      },
+      "size": 64,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should create a shim if asars are different between architectures 3`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "b7e5f58d3c0fddc1a57d1279a7f19a34a01784f4036920d4b60a1e33f6d1635b",
+        ],
+        "hash": "b7e5f58d3c0fddc1a57d1279a7f19a34a01784f4036920d4b60a1e33f6d1635b",
+      },
+      "size": 1068,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+        ],
+        "hash": "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+      },
+      "size": 33,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should create a shim if asars are different between architectures 4`] = `
+{
+  "Contents/Info.plist": {
+    "Resources/app-arm64.asar": {
+      "algorithm": "SHA256",
+      "hash": "71db54541357128943df64d54480a22d0cdf4c283f2044f48101fb1fc6e6fb2d",
+    },
+    "Resources/app-x64.asar": {
+      "algorithm": "SHA256",
+      "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
+    },
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "b62aaaed07ff72dc33da1720d900e0443c060285ef374ce1bdaef1d4f28b5fe4",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should merge two different asars when \`mergeASARs\` is enabled 1`] = `
+{
+  "files": {
+    "extra-file.txt": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "b8f261b95f81761658c8875b33a68001d8750fd898f447373bf6347e779bc3de",
+        ],
+        "hash": "b8f261b95f81761658c8875b33a68001d8750fd898f447373bf6347e779bc3de",
+      },
+      "size": 15,
+    },
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+        ],
+        "hash": "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+      },
+      "size": 64,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should merge two different asars when \`mergeASARs\` is enabled 2`] = `
+{
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "71db54541357128943df64d54480a22d0cdf4c283f2044f48101fb1fc6e6fb2d",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 1`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+        ],
+        "hash": "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+      },
+      "size": 66,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+    "private": {
+      "files": {
+        "var": {
+          "files": {
+            "app": {
+              "files": {
+                "file.txt": {
+                  "link": "private/var/file.txt",
+                },
+              },
+            },
+            "file.txt": {
+              "integrity": {
+                "algorithm": "SHA256",
+                "blockSize": 4194304,
+                "blocks": [
+                  "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+                ],
+                "hash": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+              },
+              "size": 11,
+            },
+          },
+        },
+      },
+    },
+    "var": {
+      "link": "private/var",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 2`] = `
+{
+  "Contents/Info.plist": undefined,
+  "Contents/Resources/SubApp-1.app/Contents/Info.plist": undefined,
+}
+`;
+
+exports[`makeUniversalApp force packages successfully if \`out\` bundle already exists and \`force\` is \`true\` 1`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+        ],
+        "hash": "8c8cefe616b330a70980c457e479360417a320f53f484d34df65227ce3add026",
+      },
+      "size": 64,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp force packages successfully if \`out\` bundle already exists and \`force\` is \`true\` 2`] = `
+{
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "85fff474383bd8df11cd9c5784e8fcd1525af71ff140a8a882e1dc9d5b39fcbf",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp no asar mode should correctly merge two identical app folders 1`] = `
+[
+  "index.js",
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+]
+`;
+
+exports[`makeUniversalApp no asar mode should correctly merge two identical app folders 2`] = `
+{
+  "Contents/Info.plist": {},
+}
+`;
+
+exports[`makeUniversalApp no asar mode should shim two different app folders 1`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+        ],
+        "hash": "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+      },
+      "size": 1063,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+        ],
+        "hash": "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+      },
+      "size": 33,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp no asar mode should shim two different app folders 2`] = `
+[
+  "private/var/i-aint-got-no-rhythm.bin",
+]
+`;
+
+exports[`makeUniversalApp no asar mode should shim two different app folders 3`] = `
+[
+  "index.js",
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+  {
+    "content": "hello world",
+    "name": "private/var/file.txt",
+  },
+  "private/var/i-aint-got-no-rhythm.bin",
+]
+`;
+
+exports[`makeUniversalApp no asar mode should shim two different app folders 4`] = `
+[
+  "index.js",
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+  {
+    "content": "hello world",
+    "name": "private/var/file.txt",
+  },
+  "private/var/hello-world.bin",
+]
+`;
+
+exports[`makeUniversalApp no asar mode should shim two different app folders 5`] = `
+{
+  "Contents/Info.plist": {},
+}
+`;
