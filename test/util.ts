@@ -182,13 +182,20 @@ export const templateApp = async (
   return appPath;
 };
 
-export const generateNativeApp = async (
-  appNameWithExtension: string,
-  arch: string,
-  createAsar: boolean,
-  nativeModuleArch = arch,
-  additionalFiles?: Record<string, string>,
-) => {
+export const generateNativeApp = async (options: {
+  appNameWithExtension: string;
+  arch: string;
+  createAsar: boolean;
+  nativeModuleArch?: string;
+  additionalFiles?: Record<string, string>;
+}) => {
+  const {
+    appNameWithExtension,
+    arch,
+    createAsar,
+    nativeModuleArch = arch,
+    additionalFiles,
+  } = options;
   const appPath = await templateApp(appNameWithExtension, arch, async (appPath) => {
     const resources = path.join(appPath, 'Contents', 'Resources');
     const resourcesApp = path.resolve(resources, 'app');

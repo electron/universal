@@ -36,8 +36,16 @@ describe('makeUniversalApp', () => {
   it(
     'works for lipo binary resources',
     async () => {
-      const x64AppPath = await generateNativeApp('LipoX64.app', 'x64', true);
-      const arm64AppPath = await generateNativeApp('LipoArm64.app', 'arm64', true);
+      const x64AppPath = await generateNativeApp({
+        appNameWithExtension: 'LipoX64.app',
+        arch: 'x64',
+        createAsar: true,
+      });
+      const arm64AppPath = await generateNativeApp({
+        appNameWithExtension: 'LipoArm64.app',
+        arch: 'arm64',
+        createAsar: true,
+      });
 
       const out = path.resolve(appsOutPath, 'Lipo.app');
       await makeUniversalApp({ x64AppPath, arm64AppPath, outAppPath: out, mergeASARs: true });
@@ -254,24 +262,22 @@ describe('makeUniversalApp', () => {
     it(
       'different app dirs with different macho files (shim and lipo)',
       async () => {
-        const x64AppPath = await generateNativeApp(
-          'DifferentMachoAppX64-1.app',
-          'x64',
-          false,
-          'x64',
-          {
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentMachoAppX64-1.app',
+          arch: 'x64',
+          createAsar: false,
+          additionalFiles: {
             'hello-world.bin': 'Hello World',
           },
-        );
-        const arm64AppPath = await generateNativeApp(
-          'DifferentMachoAppArm64-1.app',
-          'arm64',
-          false,
-          'arm64',
-          {
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentMachoAppArm64-1.app',
+          arch: 'arm64',
+          createAsar: false,
+          additionalFiles: {
             'i-aint-got-no-rhythm.bin': 'boomshakalaka',
           },
-        );
+        });
 
         const outAppPath = path.resolve(appsOutPath, 'DifferentMachoApp1.app');
         await makeUniversalApp({
@@ -287,24 +293,24 @@ describe('makeUniversalApp', () => {
     it(
       "different app dirs with universal macho files (shim but don't lipo)",
       async () => {
-        const x64AppPath = await generateNativeApp(
-          'DifferentButUniversalMachoAppX64-2.app',
-          'x64',
-          false,
-          'universal',
-          {
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentButUniversalMachoAppX64-2.app',
+          arch: 'x64',
+          createAsar: false,
+          nativeModuleArch: 'universal',
+          additionalFiles: {
             'hello-world.bin': 'Hello World',
           },
-        );
-        const arm64AppPath = await generateNativeApp(
-          'DifferentButUniversalMachoAppArm64-2.app',
-          'arm64',
-          false,
-          'universal',
-          {
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentButUniversalMachoAppArm64-2.app',
+          arch: 'arm64',
+          createAsar: false,
+          nativeModuleArch: 'universal',
+          additionalFiles: {
             'i-aint-got-no-rhythm.bin': 'boomshakalaka',
           },
-        );
+        });
 
         const outAppPath = path.resolve(appsOutPath, 'DifferentButUniversalMachoApp.app');
         await makeUniversalApp({
@@ -320,12 +326,16 @@ describe('makeUniversalApp', () => {
     it(
       'identical app dirs with different macho files (e.g. do not shim, but still lipo)',
       async () => {
-        const x64AppPath = await generateNativeApp('DifferentMachoAppX64-2.app', 'x64', false);
-        const arm64AppPath = await generateNativeApp(
-          'DifferentMachoAppArm64-2.app',
-          'arm64',
-          false,
-        );
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentMachoAppX64-2.app',
+          arch: 'x64',
+          createAsar: false,
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentMachoAppArm64-2.app',
+          arch: 'arm64',
+          createAsar: false,
+        });
 
         const out = path.resolve(appsOutPath, 'DifferentMachoApp2.app');
         await makeUniversalApp({
@@ -341,18 +351,18 @@ describe('makeUniversalApp', () => {
     it(
       'identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir)',
       async () => {
-        const x64AppPath = await generateNativeApp(
-          'UniversalMachoAppX64.app',
-          'x64',
-          false,
-          'universal',
-        );
-        const arm64AppPath = await generateNativeApp(
-          'UniversalMachoAppArm64.app',
-          'arm64',
-          false,
-          'universal',
-        );
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'UniversalMachoAppX64.app',
+          arch: 'x64',
+          createAsar: false,
+          nativeModuleArch: 'universal',
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'UniversalMachoAppArm64.app',
+          arch: 'arm64',
+          createAsar: false,
+          nativeModuleArch: 'universal',
+        });
 
         const out = path.resolve(appsOutPath, 'UniversalMachoApp.app');
         await makeUniversalApp({ x64AppPath, arm64AppPath, outAppPath: out });
