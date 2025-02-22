@@ -803,6 +803,18 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
       },
       "size": 66,
     },
+    "node-mac-permissions.node": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "24ade05d87f584976bae70ff260e114e8384f9aa867f6e323be0ff429655a95d",
+        ],
+        "hash": "24ade05d87f584976bae70ff260e114e8384f9aa867f6e323be0ff429655a95d",
+      },
+      "size": 273984,
+      "unpacked": true,
+    },
     "package.json": {
       "integrity": {
         "algorithm": "SHA256",
@@ -847,18 +859,20 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
 }
 `;
 
-exports[`makeUniversalApp works for lipo binary resources 2`] = `
+exports[`makeUniversalApp works for lipo binary resources 2`] = `[]`;
+
+exports[`makeUniversalApp works for lipo binary resources 3`] = `
 [
   "node-mac-permissions.node",
 ]
 `;
 
-exports[`makeUniversalApp works for lipo binary resources 3`] = `
+exports[`makeUniversalApp works for lipo binary resources 4`] = `
 {
   "Contents/Info.plist": {
     "Resources/app.asar": {
       "algorithm": "SHA256",
-      "hash": "7e6af4d00f4cc737eff922e2b386128a269f80887b79a011022f1276bdbe7832",
+      "hash": "c5dbde39636962cfe49a91eacdc969f56cd13234a1d2b1b1ea0a2a050dc7028f",
     },
   },
 }

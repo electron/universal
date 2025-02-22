@@ -5,7 +5,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
-import { createPackage, getRawHeader } from '@electron/asar';
+import { createPackage, createPackageWithOptions, getRawHeader } from '@electron/asar';
 
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
@@ -199,15 +199,17 @@ export const generateNativeApp = async (
       path.basename(appNameWithExtension, '.app'),
       additionalFiles,
     );
+    await fs.copy(
+      path.join(nativeModulesPath, `node-mac-permissions.${nativeModuleArch}.node`),
+      path.join(testPath, 'node-mac-permissions.node'),
+    );
     if (createAsar) {
-      await createPackage(testPath, path.resolve(resources, 'app.asar'));
+      await createPackageWithOptions(testPath, path.resolve(resources, 'app.asar'), {
+        unpack: '**/*.node',
+      });
     } else {
       await fs.copy(testPath, resourcesApp);
     }
-    await fs.copy(
-      path.join(nativeModulesPath, `node-mac-permissions.${nativeModuleArch}.node`),
-      path.join(resourcesApp, 'node-mac-permissions.node'),
-    );
   });
   return appPath;
 };
