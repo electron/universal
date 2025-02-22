@@ -76,5 +76,6 @@ export const readMachOHeader = async (path: string) => {
   const numOfBytes = 4;
   const fd = await fs.open(path, 'r');
   const result = await fs.read(fd, Buffer.alloc(numOfBytes), 0, numOfBytes, 0);
+  await fs.close(fd);
   return result.buffer;
 };
