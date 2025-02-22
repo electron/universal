@@ -71,3 +71,10 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
 
   return files;
 };
+
+export const readMachOHeader = async (path: string) => {
+  const numOfBytes = 4;
+  const fd = await fs.open(path, 'r');
+  const result = await fs.read(fd, Buffer.alloc(numOfBytes), 0, numOfBytes, 0);
+  return result.buffer;
+};

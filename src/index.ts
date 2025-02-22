@@ -15,7 +15,7 @@ import {
   mergeASARs,
 } from './asar-utils';
 import { d } from './debug';
-import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
+import { AppFile, AppFileType, getAllAppFiles, readMachOHeader } from './file-utils';
 import { sha } from './sha';
 
 /**
@@ -167,11 +167,9 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       const first = await fs.realpath(path.resolve(tmpApp, machOFile.relativePath));
       const second = await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath));
 
-      // check if both files (same name) are already universal.
-      // this must occur before checking `sha` as their sha's will be different between builds if being built locally
       if (
-        isUniversalMachO(await fs.readFile(first)) &&
-        isUniversalMachO(await fs.readFile(second))
+        isUniversalMachO(await readMachOHeader(first)) &&
+        isUniversalMachO(await readMachOHeader(second))
       ) {
         d(machOFile.relativePath, `is already universal across builds, skipping lipo`);
         knownMergedMachOFiles.add(machOFile.relativePath);
