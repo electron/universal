@@ -2,15 +2,11 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import { makeUniversalApp } from '../dist/cjs/index';
-import {
-  appsPath,
-  appsOutPath,
-  createTestApp,
-  templateApp,
-  VERIFY_APP_TIMEOUT,
-  verifyApp,
-} from './util';
+import { createTestApp, templateApp, VERIFY_APP_TIMEOUT, verifyApp } from './util';
 import { createPackage, createPackageWithOptions } from '@electron/asar';
+
+const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
+const appsOutPath = path.resolve(__dirname, 'fixtures', 'apps', 'out');
 
 // See `jest.setup.ts` for app fixture setup process
 describe('makeUniversalApp', () => {
@@ -160,110 +156,128 @@ describe('makeUniversalApp', () => {
       },
       VERIFY_APP_TIMEOUT,
     );
-    it('should generate AsarIntegrity for all asars in the application', async () => {
-      const { testPath } = await createTestApp('app-2');
-      const testAsarPath = path.resolve(appsOutPath, 'app-2.asar');
-      await createPackage(testPath, testAsarPath);
 
-      const arm64AppPath = await templateApp('Arm64-2.app', 'arm64', async (appPath) => {
-        await fs.copyFile(testAsarPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
-        await fs.copyFile(
-          testAsarPath,
-          path.resolve(appPath, 'Contents', 'Resources', 'webapp.asar'),
-        );
-      });
-      const x64AppPath = await templateApp('X64-2.app', 'x64', async (appPath) => {
-        await fs.copyFile(testAsarPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
-        await fs.copyFile(
-          testAsarPath,
-          path.resolve(appPath, 'Contents', 'Resources', 'webbapp.asar'),
-        );
-      });
-      const outAppPath = path.resolve(appsOutPath, 'MultipleAsars.app');
+    // TODO: Investigate if this should even be allowed.
+    // Current logic detects all unpacked files as APP_CODE, which doesn't seem correct since it could also be a macho file requiring lipo
+    // https://github.com/electron/universal/blob/d90d573ccf69a5b14b91aa818c8b97e0e6840399/src/file-utils.ts#L48-L49
+    it.skip(
+      'should shim asars with different unpacked dirs',
+      async () => {
+        const arm64AppPath = await templateApp('UnpackedArm64.app', 'arm64', async (appPath) => {
+          const { testPath } = await createTestApp('UnpackedAppArm64');
+          await createPackageWithOptions(
+            testPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+            {
+              unpackDir: 'var',
+              unpack: '*.txt',
+            },
+          );
+        });
 
-      it(
-        'should shim asars with different unpacked dirs',
-        async () => {
-          const arm64AppPath = await templateApp('UnpackedArm64.app', 'arm64', async (appPath) => {
-            const { testPath } = await createTestApp('UnpackedAppArm64');
-            await createPackageWithOptions(
-              testPath,
-              path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
-              {
-                unpackDir: 'var',
-                unpack: '*.txt',
-              },
-            );
-          });
+        const x64AppPath = await templateApp('UnpackedX64.app', 'x64', async (appPath) => {
+          const { testPath } = await createTestApp('UnpackedAppX64');
+          await createPackageWithOptions(
+            testPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+            {},
+          );
+        });
 
-          const x64AppPath = await templateApp('UnpackedX64.app', 'x64', async (appPath) => {
-            const { testPath } = await createTestApp('UnpackedAppX64');
-            await createPackageWithOptions(
-              testPath,
-              path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
-              {},
-            );
-          });
+        const outAppPath = path.resolve(appsOutPath, 'UnpackedDir.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
+        });
+        await verifyApp(outAppPath);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
 
-          const outAppPath = path.resolve(appsOutPath, 'UnpackedDir.app');
-          await makeUniversalApp({
-            x64AppPath,
-            arm64AppPath,
-            outAppPath,
-            mergeASARs: true,
-          });
-          await verifyApp(outAppPath);
-        },
-        VERIFY_APP_TIMEOUT,
-      );
-    });
+    it(
+      'should generate AsarIntegrity for all asars in the application',
+      async () => {
+        const { testPath } = await createTestApp('app-2');
+        const testAsarPath = path.resolve(appsOutPath, 'app-2.asar');
+        await createPackage(testPath, testAsarPath);
 
-    describe('no asar mode', () => {
-      it(
-        'should correctly merge two identical app folders',
-        async () => {
-          const out = path.resolve(appsOutPath, 'MergedNoAsar.app');
-          await makeUniversalApp({
-            x64AppPath: path.resolve(appsPath, 'X64NoAsar.app'),
-            arm64AppPath: path.resolve(appsPath, 'Arm64NoAsar.app'),
-            outAppPath: out,
-          });
-          await verifyApp(out);
-        },
-        VERIFY_APP_TIMEOUT,
-      );
-
-      it(
-        'should shim two different app folders',
-        async () => {
-          const arm64AppPath = await templateApp('ShimArm64.app', 'arm64', async (appPath) => {
-            const { testPath } = await createTestApp('shimArm64', {
-              'i-aint-got-no-rhythm.bin': 'boomshakalaka',
-            });
-            await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
-          });
-
-          const x64AppPath = await templateApp('ShimX64.app', 'x64', async (appPath) => {
-            const { testPath } = await createTestApp('shimX64', {
-              'hello-world.bin': 'Hello World',
-            });
-            await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
-          });
-
-          const outAppPath = path.resolve(appsOutPath, 'ShimNoAsar.app');
-          await makeUniversalApp({
-            x64AppPath,
-            arm64AppPath,
-            outAppPath,
-          });
-          await verifyApp(outAppPath);
-        },
-        VERIFY_APP_TIMEOUT,
-      );
-    });
-
-    // TODO: Add tests for
-    // * different app dirs with different macho files
-    // * identical app dirs with universal macho files
+        const arm64AppPath = await templateApp('Arm64-2.app', 'arm64', async (appPath) => {
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+          );
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'webapp.asar'),
+          );
+        });
+        const x64AppPath = await templateApp('X64-2.app', 'x64', async (appPath) => {
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+          );
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'webbapp.asar'),
+          );
+        });
+        const outAppPath = path.resolve(appsOutPath, 'MultipleAsars.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
+          mergeASARs: true,
+        });
+        await verifyApp(outAppPath);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
   });
+
+  describe('no asar mode', () => {
+    it(
+      'should correctly merge two identical app folders',
+      async () => {
+        const out = path.resolve(appsOutPath, 'MergedNoAsar.app');
+        await makeUniversalApp({
+          x64AppPath: path.resolve(appsPath, 'X64NoAsar.app'),
+          arm64AppPath: path.resolve(appsPath, 'Arm64NoAsar.app'),
+          outAppPath: out,
+        });
+        await verifyApp(out);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+
+    it(
+      'should shim two different app folders',
+      async () => {
+        const arm64AppPath = await templateApp('ShimArm64.app', 'arm64', async (appPath) => {
+          const { testPath } = await createTestApp('shimArm64', {
+            'i-aint-got-no-rhythm.bin': 'boomshakalaka',
+          });
+          await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
+        });
+
+        const x64AppPath = await templateApp('ShimX64.app', 'x64', async (appPath) => {
+          const { testPath } = await createTestApp('shimX64', { 'hello-world.bin': 'Hello World' });
+          await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
+        });
+
+        const outAppPath = path.resolve(appsOutPath, 'ShimNoAsar.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
+        });
+        await verifyApp(outAppPath);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+  });
+
+  // TODO: Add tests for
+  // * different app dirs with different macho files
+  // * identical app dirs with universal macho files
 });

@@ -1,4 +1,3 @@
-import { getRawHeader } from '@electron/asar';
 import { downloadArtifact } from '@electron/get';
 import { spawn } from '@malept/cross-spawn-promise';
 import * as zip from 'cross-zip';
@@ -6,6 +5,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
+import { getRawHeader } from '@electron/asar';
 
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
@@ -13,8 +13,8 @@ import * as fileUtils from '../dist/cjs/file-utils';
 export const VERIFY_APP_TIMEOUT = 80 * 1000;
 
 export const asarsDir = path.resolve(__dirname, 'fixtures', 'asars');
-export const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
-export const appsOutPath = path.resolve(appsPath, 'out');
+export const appsDir = path.resolve(__dirname, 'fixtures', 'apps');
+export const appsOutPath = path.resolve(appsDir, 'out');
 
 export const verifyApp = async (appPath: string) => {
   await ensureUniversal(appPath);
@@ -130,7 +130,7 @@ export const createTestApp = async (
   additionalFiles: Record<string, string> = {},
 ) => {
   const outDir = (testName || 'app') + Math.floor(Math.random() * 100); // tests run in parallel, randomize dir suffix to prevent naming collisions
-  const testPath = path.join(appsPath, outDir);
+  const testPath = path.join(appsDir, outDir);
   await fs.remove(testPath);
 
   await fs.copy(path.join(asarsDir, 'app'), testPath);
@@ -171,9 +171,9 @@ export const templateApp = async (
     platform: 'darwin',
     arch,
   });
-  const appPath = path.resolve(appsPath, name);
-  zip.unzipSync(electronZip, appsPath);
-  await fs.rename(path.resolve(appsPath, 'Electron.app'), appPath);
+  const appPath = path.resolve(appsDir, name);
+  zip.unzipSync(electronZip, appsDir);
+  await fs.rename(path.resolve(appsDir, 'Electron.app'), appPath);
   await fs.remove(path.resolve(appPath, 'Contents', 'Resources', 'default_app.asar'));
   await modify(appPath);
 
