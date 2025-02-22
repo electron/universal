@@ -3,7 +3,7 @@ import * as path from 'path';
 
 import { makeUniversalApp } from '../dist/cjs/index';
 import { createTestApp, templateApp, VERIFY_APP_TIMEOUT, verifyApp } from './util';
-import { createPackage } from '@electron/asar';
+import { createPackage, createPackageWithOptions } from '@electron/asar';
 
 const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
 const appsOutPath = path.resolve(__dirname, 'fixtures', 'apps', 'out');
@@ -151,6 +151,41 @@ describe('makeUniversalApp', () => {
           outAppPath,
           mergeASARs: true,
           infoPlistsToIgnore: 'SubApp-1.app/Contents/Info.plist',
+        });
+        await verifyApp(outAppPath);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+
+    it(
+      'should shim asars with different unpacked dirs',
+      async () => {
+        const arm64AppPath = await templateApp('UnpackedArm64.app', 'arm64', async (appPath) => {
+          const { testPath } = await createTestApp('UnpackedAppArm64');
+          await createPackageWithOptions(
+            testPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+            {
+              unpackDir: 'var',
+              unpack: '*.txt',
+            },
+          );
+        });
+
+        const x64AppPath = await templateApp('UnpackedX64.app', 'x64', async (appPath) => {
+          const { testPath } = await createTestApp('UnpackedAppX64');
+          await createPackageWithOptions(
+            testPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+            {},
+          );
+        });
+
+        const outAppPath = path.resolve(appsOutPath, 'UnpackedDir.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
         });
         await verifyApp(outAppPath);
       },
