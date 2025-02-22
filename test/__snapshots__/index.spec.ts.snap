@@ -306,6 +306,7 @@ exports[`makeUniversalApp asar mode should shim asars with different unpacked di
               "files": {
                 "file.txt": {
                   "link": "private/var/file.txt",
+                  "unpacked": true,
                 },
               },
             },
@@ -327,6 +328,7 @@ exports[`makeUniversalApp asar mode should shim asars with different unpacked di
     },
     "var": {
       "link": "private/var",
+      "unpacked": true,
     },
   },
 }
@@ -433,7 +435,7 @@ exports[`makeUniversalApp asar mode should shim asars with different unpacked di
   "Contents/Info.plist": {
     "Resources/app-arm64.asar": {
       "algorithm": "SHA256",
-      "hash": "c7563e17e768e508045ffb888935d50dbf785bbba3ffb0068e5472fda4f6c199",
+      "hash": "d06a628e759f54def7ff8785a077b3a3d756882cb84ee99e9725966226e1f195",
     },
     "Resources/app-x64.asar": {
       "algorithm": "SHA256",
