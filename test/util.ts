@@ -14,6 +14,7 @@ export const VERIFY_APP_TIMEOUT = 80 * 1000;
 
 export const asarsDir = path.resolve(__dirname, 'fixtures', 'asars');
 export const appsDir = path.resolve(__dirname, 'fixtures', 'apps');
+export const appsOutPath = path.resolve(appsDir, 'out');
 
 export const verifyApp = async (appPath: string) => {
   await ensureUniversal(appPath);
