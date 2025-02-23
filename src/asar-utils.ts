@@ -152,10 +152,7 @@ export const mergeASARs = async ({
       continue;
     }
 
-    if (
-      MACHO_UNIVERSAL_MAGIC.has(x64Content.readUInt32LE(0)) &&
-      MACHO_UNIVERSAL_MAGIC.has(arm64Content.readUInt32LE(0))
-    ) {
+    if (isUniversalMachO(x64Content) && isUniversalMachO(arm64Content)) {
       continue;
     }
 
@@ -222,4 +219,8 @@ export const mergeASARs = async ({
   } finally {
     await Promise.all([fs.remove(x64Dir), fs.remove(arm64Dir)]);
   }
+};
+
+export const isUniversalMachO = (fileContent: Buffer) => {
+  return MACHO_UNIVERSAL_MAGIC.has(fileContent.readUInt32LE(0));
 };
