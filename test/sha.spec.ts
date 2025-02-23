@@ -1,6 +1,7 @@
 import * as path from 'path';
 
 import { sha } from '../src/sha';
+import { describe, expect, it } from '@jest/globals';
 
 describe('sha', () => {
   it('should correctly hash a file', async () => {

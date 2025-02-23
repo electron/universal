@@ -1,6 +1,7 @@
 import * as path from 'path';
 
 import { AsarMode, detectAsarMode, generateAsarIntegrity } from '../src/asar-utils';
+import { describe, expect, it } from '@jest/globals';
 
 const asarsPath = path.resolve(__dirname, 'fixtures', 'asars');
 const appsPath = path.resolve(__dirname, 'fixtures', 'apps');

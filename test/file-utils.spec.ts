@@ -1,6 +1,7 @@
 import * as path from 'path';
 
 import { AppFile, AppFileType, getAllAppFiles } from '../src/file-utils';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 
 const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
 

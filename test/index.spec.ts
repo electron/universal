@@ -4,6 +4,7 @@ import * as path from 'path';
 import { makeUniversalApp } from '../dist/cjs/index';
 import { createTestApp, templateApp, VERIFY_APP_TIMEOUT, verifyApp } from './util';
 import { createPackage, createPackageWithOptions } from '@electron/asar';
+import { afterEach, describe, expect, it } from '@jest/globals';
 
 const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
 const appsOutPath = path.resolve(__dirname, 'fixtures', 'apps', 'out');
