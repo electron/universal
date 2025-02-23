@@ -116,6 +116,10 @@ export const removeUnstableProperties = (data: any) => {
 };
 
 /**
+ * Creates an app directory at runtime for usage:
+ * - `testPath` can be used with `asar.createPackage`. Just set the output `.asar` path to `Test.app/Contents/Resources/<asar_name>.asar`
+ * - `testPath` can be utilized for logic paths involving `AsarMode.NO_ASAR` and copied directly to `Test.app/Contents/Resources`
+ *
  * Directory structure:
  * testName
  * ├── private
@@ -127,7 +131,7 @@ export const removeUnstableProperties = (data: any) => {
  * ├── index.js
  * ├── package.json
  */
-export const createTestApp = async (
+export const createStagingAppDir = async (
   testName: string | undefined,
   additionalFiles: Record<string, string> = {},
 ) => {
@@ -202,7 +206,7 @@ export const generateNativeApp = async (options: {
     if (!fs.existsSync(resourcesApp)) {
       await fs.mkdir(resourcesApp);
     }
-    const { testPath } = await createTestApp(
+    const { testPath } = await createStagingAppDir(
       path.basename(appNameWithExtension, '.app'),
       additionalFiles,
     );

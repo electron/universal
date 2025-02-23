@@ -3,7 +3,7 @@ import * as path from 'path';
 
 import { makeUniversalApp } from '../dist/cjs/index';
 import {
-  createTestApp,
+  createStagingAppDir,
   generateNativeApp,
   templateApp,
   VERIFY_APP_TIMEOUT,
@@ -150,7 +150,7 @@ describe('makeUniversalApp', () => {
       'should not inject ElectronAsarIntegrity into `infoPlistsToIgnore`',
       async () => {
         const arm64AppPath = await templateApp('Arm64-1.app', 'arm64', async (appPath) => {
-          const { testPath } = await createTestApp('Arm64-1');
+          const { testPath } = await createStagingAppDir('Arm64-1');
           await createPackage(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
           await templateApp('SubApp-1.app', 'arm64', async (subArm64AppPath) => {
             await fs.move(
@@ -160,7 +160,7 @@ describe('makeUniversalApp', () => {
           });
         });
         const x64AppPath = await templateApp('X64-1.app', 'x64', async (appPath) => {
-          const { testPath } = await createTestApp('X64-1');
+          const { testPath } = await createStagingAppDir('X64-1');
           await createPackage(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
           await templateApp('SubApp-1.app', 'x64', async (subArm64AppPath) => {
             await fs.move(
@@ -186,7 +186,7 @@ describe('makeUniversalApp', () => {
       'should shim asars with different unpacked dirs',
       async () => {
         const arm64AppPath = await templateApp('UnpackedArm64.app', 'arm64', async (appPath) => {
-          const { testPath } = await createTestApp('UnpackedAppArm64');
+          const { testPath } = await createStagingAppDir('UnpackedAppArm64');
           await createPackageWithOptions(
             testPath,
             path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
@@ -198,7 +198,7 @@ describe('makeUniversalApp', () => {
         });
 
         const x64AppPath = await templateApp('UnpackedX64.app', 'x64', async (appPath) => {
-          const { testPath } = await createTestApp('UnpackedAppX64');
+          const { testPath } = await createStagingAppDir('UnpackedAppX64');
           await createPackageWithOptions(
             testPath,
             path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
@@ -237,14 +237,16 @@ describe('makeUniversalApp', () => {
       'should shim two different app folders',
       async () => {
         const arm64AppPath = await templateApp('ShimArm64.app', 'arm64', async (appPath) => {
-          const { testPath } = await createTestApp('shimArm64', {
+          const { testPath } = await createStagingAppDir('shimArm64', {
             'i-aint-got-no-rhythm.bin': 'boomshakalaka',
           });
           await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
         });
 
         const x64AppPath = await templateApp('ShimX64.app', 'x64', async (appPath) => {
-          const { testPath } = await createTestApp('shimX64', { 'hello-world.bin': 'Hello World' });
+          const { testPath } = await createStagingAppDir('shimX64', {
+            'hello-world.bin': 'Hello World',
+          });
           await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
         });
 
