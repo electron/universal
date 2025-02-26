@@ -1,7 +1,9 @@
 node_modules
 dist
-entry-asar/*.js*
-entry-asar/*.ts
+entry-asar/cjs/*.js*
+entry-asar/cjs/*.d.ts
+entry-asar/esm/*.?js*
+entry-asar/esm/*.d.?ts
 *.app
 test/fixtures/apps
 coverage
