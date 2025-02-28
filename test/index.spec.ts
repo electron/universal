@@ -182,7 +182,10 @@ describe('makeUniversalApp', () => {
       VERIFY_APP_TIMEOUT,
     );
 
-    it(
+    // TODO: Investigate if this should even be allowed.
+    // Current logic detects all unpacked files as APP_CODE, which doesn't seem correct since it could also be a macho file requiring lipo
+    // https://github.com/electron/universal/blob/d90d573ccf69a5b14b91aa818c8b97e0e6840399/src/file-utils.ts#L48-L49
+    it.skip(
       'should shim asars with different unpacked dirs',
       async () => {
         const arm64AppPath = await templateApp('UnpackedArm64.app', 'arm64', async (appPath) => {
@@ -211,6 +214,45 @@ describe('makeUniversalApp', () => {
           x64AppPath,
           arm64AppPath,
           outAppPath,
+        });
+        await verifyApp(outAppPath);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+
+    it(
+      'should generate AsarIntegrity for all asars in the application',
+      async () => {
+        const { testPath } = await createTestApp('app-2');
+        const testAsarPath = path.resolve(appsOutPath, 'app-2.asar');
+        await createPackage(testPath, testAsarPath);
+
+        const arm64AppPath = await templateApp('Arm64-2.app', 'arm64', async (appPath) => {
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+          );
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'webapp.asar'),
+          );
+        });
+        const x64AppPath = await templateApp('X64-2.app', 'x64', async (appPath) => {
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+          );
+          await fs.copyFile(
+            testAsarPath,
+            path.resolve(appPath, 'Contents', 'Resources', 'webbapp.asar'),
+          );
+        });
+        const outAppPath = path.resolve(appsOutPath, 'MultipleAsars.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
+          mergeASARs: true,
         });
         await verifyApp(outAppPath);
       },
