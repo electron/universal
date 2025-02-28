@@ -280,6 +280,10 @@ exports[`makeUniversalApp asar mode should generate AsarIntegrity for all asars 
       "algorithm": "SHA256",
       "hash": "7e6af4d00f4cc737eff922e2b386128a269f80887b79a011022f1276bdbe7832",
     },
+    "Resources/webbapp.asar": {
+      "algorithm": "SHA256",
+      "hash": "7e6af4d00f4cc737eff922e2b386128a269f80887b79a011022f1276bdbe7832",
+    },
   },
 }
 `;
@@ -691,7 +695,12 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
 
 exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 5`] = `
 {
-  "Contents/Info.plist": {},
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "27433ee3e34b3b0dabb29d18d40646126e80c56dbce8c4bb2adef7278b5a46c0",
+    },
+  },
 }
 `;
 
@@ -770,7 +779,12 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
 
 exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 5`] = `
 {
-  "Contents/Info.plist": {},
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "27433ee3e34b3b0dabb29d18d40646126e80c56dbce8c4bb2adef7278b5a46c0",
+    },
+  },
 }
 `;
 
@@ -914,7 +928,12 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 4`]
 
 exports[`makeUniversalApp no asar mode should shim two different app folders 5`] = `
 {
-  "Contents/Info.plist": {},
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "27433ee3e34b3b0dabb29d18d40646126e80c56dbce8c4bb2adef7278b5a46c0",
+    },
+  },
 }
 `;
 
