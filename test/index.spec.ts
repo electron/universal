@@ -223,7 +223,7 @@ describe('makeUniversalApp', () => {
     it(
       'should generate AsarIntegrity for all asars in the application',
       async () => {
-        const { testPath } = await createTestApp('app-2');
+        const { testPath } = await createStagingAppDir('app-2');
         const testAsarPath = path.resolve(appsOutPath, 'app-2.asar');
         await createPackage(testPath, testAsarPath);
 
