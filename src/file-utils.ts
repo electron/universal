@@ -1,6 +1,7 @@
 import { spawn, ExitCodeError } from '@malept/cross-spawn-promise';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { promises as stream } from 'node:stream';
 
 const MACHO_PREFIX = 'Mach-O ';
 
@@ -70,4 +71,15 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
   await traverse(appPath);
 
   return files;
+};
+
+export const readMachOHeader = async (path: string) => {
+  const chunks: Buffer[] = [];
+  // no need to read the entire file, we only need the first 4 bytes of the file to determine the header
+  await stream.pipeline(fs.createReadStream(path, { start: 0, end: 3 }), async function* (source) {
+    for await (const chunk of source) {
+      chunks.push(chunk);
+    }
+  });
+  return Buffer.concat(chunks);
 };

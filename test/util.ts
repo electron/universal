@@ -5,16 +5,18 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
-import { getRawHeader } from '@electron/asar';
+import { createPackage, createPackageWithOptions, getRawHeader } from '@electron/asar';
 
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
 // plus some tests create fixtures at runtime
 export const VERIFY_APP_TIMEOUT = 80 * 1000;
 
-export const asarsDir = path.resolve(__dirname, 'fixtures', 'asars');
-export const appsDir = path.resolve(__dirname, 'fixtures', 'apps');
+const fixtureDir = path.resolve(__dirname, 'fixtures');
+export const asarsDir = path.resolve(fixtureDir, 'asars');
+export const appsDir = path.resolve(fixtureDir, 'apps');
 export const appsOutPath = path.resolve(appsDir, 'out');
+const nativeModulesPath = path.resolve(fixtureDir, 'native');
 
 export const verifyApp = async (appPath: string) => {
   await ensureUniversal(appPath);
@@ -114,6 +116,10 @@ export const removeUnstableProperties = (data: any) => {
 };
 
 /**
+ * Creates an app directory at runtime for usage:
+ * - `testPath` can be used with `asar.createPackage`. Just set the output `.asar` path to `Test.app/Contents/Resources/<asar_name>.asar`
+ * - `testPath` can be utilized for logic paths involving `AsarMode.NO_ASAR` and copied directly to `Test.app/Contents/Resources`
+ *
  * Directory structure:
  * testName
  * ├── private
@@ -125,7 +131,7 @@ export const removeUnstableProperties = (data: any) => {
  * ├── index.js
  * ├── package.json
  */
-export const createTestApp = async (
+export const createStagingAppDir = async (
   testName: string | undefined,
   additionalFiles: Record<string, string> = {},
 ) => {
@@ -177,5 +183,44 @@ export const templateApp = async (
   await fs.remove(path.resolve(appPath, 'Contents', 'Resources', 'default_app.asar'));
   await modify(appPath);
 
+  return appPath;
+};
+
+export const generateNativeApp = async (options: {
+  appNameWithExtension: string;
+  arch: string;
+  createAsar: boolean;
+  nativeModuleArch?: string;
+  additionalFiles?: Record<string, string>;
+}) => {
+  const {
+    appNameWithExtension,
+    arch,
+    createAsar,
+    nativeModuleArch = arch,
+    additionalFiles,
+  } = options;
+  const appPath = await templateApp(appNameWithExtension, arch, async (appPath) => {
+    const resources = path.join(appPath, 'Contents', 'Resources');
+    const resourcesApp = path.resolve(resources, 'app');
+    if (!fs.existsSync(resourcesApp)) {
+      await fs.mkdir(resourcesApp);
+    }
+    const { testPath } = await createStagingAppDir(
+      path.basename(appNameWithExtension, '.app'),
+      additionalFiles,
+    );
+    await fs.copy(
+      path.join(nativeModulesPath, `node-mac-permissions.${nativeModuleArch}.node`),
+      path.join(testPath, 'node-mac-permissions.node'),
+    );
+    if (createAsar) {
+      await createPackageWithOptions(testPath, path.resolve(resources, 'app.asar'), {
+        unpack: '**/*.node',
+      });
+    } else {
+      await fs.copy(testPath, resourcesApp);
+    }
+  });
   return appPath;
 };
