@@ -148,11 +148,13 @@ export const mergeASARs = async ({
     const x64Content = asar.extractFile(x64AsarPath, file);
     const arm64Content = asar.extractFile(arm64AsarPath, file);
 
+    // Skip file if the same content
     if (x64Content.compare(arm64Content) === 0) {
       continue;
     }
 
-    if (isUniversalMachO(x64Content) && isUniversalMachO(arm64Content)) {
+    // Skip universal Mach-O files.
+    if (isUniversalMachO(x64Content)) {
       continue;
     }
 
