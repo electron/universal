@@ -49,7 +49,7 @@ describe('makeUniversalApp', () => {
 
       const out = path.resolve(appsOutPath, 'Lipo.app');
       await makeUniversalApp({ x64AppPath, arm64AppPath, outAppPath: out, mergeASARs: true });
-      await verifyApp(out);
+      await verifyApp(out, true);
     },
     VERIFY_APP_TIMEOUT,
   );
@@ -329,7 +329,7 @@ describe('makeUniversalApp', () => {
           arm64AppPath,
           outAppPath,
         });
-        await verifyApp(outAppPath);
+        await verifyApp(outAppPath, true);
       },
       VERIFY_APP_TIMEOUT,
     );
@@ -362,7 +362,7 @@ describe('makeUniversalApp', () => {
           arm64AppPath,
           outAppPath,
         });
-        await verifyApp(outAppPath);
+        await verifyApp(outAppPath, true);
       },
       VERIFY_APP_TIMEOUT,
     );
@@ -387,7 +387,7 @@ describe('makeUniversalApp', () => {
           arm64AppPath,
           outAppPath: out,
         });
-        await verifyApp(out);
+        await verifyApp(out, true);
       },
       VERIFY_APP_TIMEOUT,
     );
@@ -410,7 +410,7 @@ describe('makeUniversalApp', () => {
 
         const out = path.resolve(appsOutPath, 'UniversalMachoApp.app');
         await makeUniversalApp({ x64AppPath, arm64AppPath, outAppPath: out });
-        await verifyApp(out);
+        await verifyApp(out, true);
       },
       VERIFY_APP_TIMEOUT,
     );

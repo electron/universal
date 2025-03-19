@@ -5,20 +5,19 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
-import { createPackage, createPackageWithOptions, getRawHeader } from '@electron/asar';
+import { createPackageWithOptions, getRawHeader } from '@electron/asar';
 
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
 // plus some tests create fixtures at runtime
 export const VERIFY_APP_TIMEOUT = 80 * 1000;
 
-const fixtureDir = path.resolve(__dirname, 'fixtures');
+export const fixtureDir = path.resolve(__dirname, 'fixtures');
 export const asarsDir = path.resolve(fixtureDir, 'asars');
 export const appsDir = path.resolve(fixtureDir, 'apps');
 export const appsOutPath = path.resolve(appsDir, 'out');
-const nativeModulesPath = path.resolve(fixtureDir, 'native');
 
-export const verifyApp = async (appPath: string) => {
+export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho = false) => {
   await ensureUniversal(appPath);
 
   const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
@@ -29,7 +28,9 @@ export const verifyApp = async (appPath: string) => {
   for await (const asar of asars) {
     // verify header
     const asarFs = getRawHeader(path.resolve(resourcesDir, asar));
-    expect(removeUnstableProperties(asarFs.header)).toMatchSnapshot();
+    expect(
+      removeUnstableProperties(asarFs.header, containsRuntimeGeneratedMacho),
+    ).toMatchSnapshot();
   }
 
   // check all app and unpacked dirs (incl. shimmed)
@@ -66,12 +67,14 @@ export const verifyApp = async (appPath: string) => {
   for (let i = 0; i < integrity.length; i++) {
     const relativePath = infoPlists[i];
     const asarIntegrity = integrity[i];
-    integrityMap[relativePath] = asarIntegrity;
+    // note: `infoPlistsToIgnore` will not have integrity in sub-app plists
+    integrityMap[relativePath] = asarIntegrity
+      ? removeUnstableProperties(asarIntegrity, containsRuntimeGeneratedMacho)
+      : undefined;
   }
   expect(integrityMap).toMatchSnapshot();
 };
 
-// note: `infoPlistsToIgnore` will not have integrity in sub-app plists
 const extractAsarIntegrity = async (infoPlist: string) => {
   const { ElectronAsarIntegrity: integrity, ...otherData } = plist.parse(
     await fs.readFile(infoPlist, 'utf-8'),
@@ -104,11 +107,14 @@ export const toSystemIndependentPath = (s: string): string => {
   return path.sep === '/' ? s : s.replace(/\\/g, '/');
 };
 
-export const removeUnstableProperties = (data: any) => {
+export const removeUnstableProperties = (data: any, containsRuntimeGeneratedMacho: boolean) => {
   return JSON.parse(
     JSON.stringify(data, (name, value) => {
       if (name === 'offset') {
         return undefined;
+      }
+      if (containsRuntimeGeneratedMacho && (name === 'hash' || name === 'blocks')) {
+        return '<stripped>'; // these are unstable for macho fixtures due to runtime generation
       }
       return value;
     }),
@@ -211,12 +217,12 @@ export const generateNativeApp = async (options: {
       additionalFiles,
     );
     await fs.copy(
-      path.join(nativeModulesPath, `node-mac-permissions.${nativeModuleArch}.node`),
-      path.join(testPath, 'node-mac-permissions.node'),
+      path.join(appsDir, `hello-world-${nativeModuleArch}`),
+      path.join(testPath, 'hello-world'),
     );
     if (createAsar) {
       await createPackageWithOptions(testPath, path.resolve(resources, 'app.asar'), {
-        unpack: '**/*.node',
+        unpack: '**/hello-world',
       });
     } else {
       await fs.copy(testPath, resourcesApp);
