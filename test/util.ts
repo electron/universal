@@ -7,6 +7,8 @@ import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
 import { getRawHeader } from '@electron/asar';
 
+declare const expect: typeof import('@jest/globals').expect;
+
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
 // plus some tests create fixtures at runtime
