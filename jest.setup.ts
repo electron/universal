@@ -3,7 +3,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { appsDir, asarsDir, fixtureDir, templateApp } from './test/util';
 
-// generates binaries from helloorld.c
+// generates binaries from hello-world.c
 // hello-world-universal, hello-world-x86_64, hello-world-arm64
 const generateMachO = async () => {
   const src = path.resolve(fixtureDir, 'hello-world.c');
