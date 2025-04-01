@@ -5,7 +5,7 @@ import { appsDir, asarsDir, fixtureDir, templateApp } from './test/util';
 
 // generates binaries from hello-world.c
 // hello-world-universal, hello-world-x86_64, hello-world-arm64
-const generateMachO = async () => {
+const generateMachO = () => {
   const src = path.resolve(fixtureDir, 'hello-world.c');
 
   const outputFiles = ['x86_64', 'arm64'].map((arch) => {
