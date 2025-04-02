@@ -627,8 +627,10 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
-        "hash": "<stripped>",
+        "blocks": [
+          "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+        ],
+        "hash": "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
       },
       "size": 1063,
     },
@@ -636,8 +638,10 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
-        "hash": "<stripped>",
+        "blocks": [
+          "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+        ],
+        "hash": "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
       },
       "size": 33,
     },
@@ -694,7 +698,7 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
   "Contents/Info.plist": {
     "Resources/app.asar": {
       "algorithm": "SHA256",
-      "hash": "<stripped>",
+      "hash": "27433ee3e34b3b0dabb29d18d40646126e80c56dbce8c4bb2adef7278b5a46c0",
     },
   },
 }
@@ -707,8 +711,10 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
-        "hash": "<stripped>",
+        "blocks": [
+          "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+        ],
+        "hash": "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
       },
       "size": 1063,
     },
@@ -716,8 +722,10 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
-        "hash": "<stripped>",
+        "blocks": [
+          "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+        ],
+        "hash": "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
       },
       "size": 33,
     },
@@ -774,7 +782,7 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
   "Contents/Info.plist": {
     "Resources/app.asar": {
       "algorithm": "SHA256",
-      "hash": "<stripped>",
+      "hash": "27433ee3e34b3b0dabb29d18d40646126e80c56dbce8c4bb2adef7278b5a46c0",
     },
   },
 }
@@ -936,8 +944,10 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
-        "hash": "<stripped>",
+        "blocks": [
+          "bb775443c1c6bbc9c06580111e671319a9f67cc8d3fec9443a3ee6450b443a66",
+        ],
+        "hash": "bb775443c1c6bbc9c06580111e671319a9f67cc8d3fec9443a3ee6450b443a66",
       },
       "size": 49824,
       "unpacked": true,
@@ -946,8 +956,10 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
-        "hash": "<stripped>",
+        "blocks": [
+          "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+        ],
+        "hash": "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
       },
       "size": 66,
     },
@@ -955,8 +967,10 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
-        "hash": "<stripped>",
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
       },
       "size": 41,
     },
@@ -975,8 +989,10 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
               "integrity": {
                 "algorithm": "SHA256",
                 "blockSize": 4194304,
-                "blocks": "<stripped>",
-                "hash": "<stripped>",
+                "blocks": [
+                  "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+                ],
+                "hash": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
               },
               "size": 11,
             },
@@ -1004,7 +1020,7 @@ exports[`makeUniversalApp works for lipo binary resources 4`] = `
   "Contents/Info.plist": {
     "Resources/app.asar": {
       "algorithm": "SHA256",
-      "hash": "<stripped>",
+      "hash": "16f5341e6a66b50659c9b40ca8cb3ed3f893d74813aabde99ac51af2ef9e414d",
     },
   },
 }

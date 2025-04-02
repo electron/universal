@@ -24,15 +24,14 @@ export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho =
 
   const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
   const resourcesDirContents = await fs.readdir(resourcesDir);
+  const ignoreKeys = containsRuntimeGeneratedMacho ? ['hello-world'] : [];
 
   // sort for consistent result
   const asars = resourcesDirContents.filter((p) => p.endsWith('.asar')).sort();
   for await (const asar of asars) {
     // verify header
     const asarFs = getRawHeader(path.resolve(resourcesDir, asar));
-    expect(
-      removeUnstableProperties(asarFs.header, containsRuntimeGeneratedMacho),
-    ).toMatchSnapshot();
+    expect(removeUnstableProperties(asarFs.header, ignoreKeys)).toMatchSnapshot();
   }
 
   // check all app and unpacked dirs (incl. shimmed)
@@ -71,7 +70,7 @@ export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho =
     const asarIntegrity = integrity[i];
     // note: `infoPlistsToIgnore` will not have integrity in sub-app plists
     integrityMap[relativePath] = asarIntegrity
-      ? removeUnstableProperties(asarIntegrity, containsRuntimeGeneratedMacho)
+      ? removeUnstableProperties(asarIntegrity, ['blocks', 'hash'])
       : undefined;
   }
   expect(integrityMap).toMatchSnapshot();
@@ -109,14 +108,22 @@ export const toSystemIndependentPath = (s: string): string => {
   return path.sep === '/' ? s : s.replace(/\\/g, '/');
 };
 
-export const removeUnstableProperties = (data: any, containsRuntimeGeneratedMacho: boolean) => {
+export const removeUnstableProperties = (data: any, stripKeys: string[]) => {
+  const removeKeysRecursively: (obj: any, keys: string[]) => any = (obj, keys) =>
+    obj !== Object(obj)
+      ? obj
+      : Array.isArray(obj)
+      ? obj.map((item) => removeKeysRecursively(item, keys))
+      : Object.fromEntries(
+          Object.entries(obj)
+            // .map(([k, v]) => [k, removeKeysRecursively(v, keys)])
+            .filter(([k]) => !keys.includes(k)),
+        );
+
   return JSON.parse(
-    JSON.stringify(data, (name, value) => {
+    JSON.stringify(removeKeysRecursively(data, stripKeys), (name, value) => {
       if (name === 'offset') {
         return undefined;
-      }
-      if (containsRuntimeGeneratedMacho && (name === 'hash' || name === 'blocks')) {
-        return '<stripped>'; // these are unstable for macho fixtures due to runtime generation
       }
       return value;
     }),
