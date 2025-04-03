@@ -6,6 +6,7 @@ import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
 import { createPackageWithOptions, getRawHeader } from '@electron/asar';
+import { determineFileType } from '@electron/asar/lib/crawlfs';
 
 declare const expect: typeof import('@jest/globals').expect;
 
@@ -70,7 +71,7 @@ export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho =
     const asarIntegrity = integrity[i];
     // note: `infoPlistsToIgnore` will not have integrity in sub-app plists
     integrityMap[relativePath] = asarIntegrity
-      ? removeUnstableProperties(asarIntegrity, ['blocks', 'hash'])
+      ? removeUnstableProperties(asarIntegrity, ['hash'])
       : undefined;
   }
   expect(integrityMap).toMatchSnapshot();
@@ -109,16 +110,23 @@ export const toSystemIndependentPath = (s: string): string => {
 };
 
 export const removeUnstableProperties = (data: any, stripKeys: string[]) => {
-  const removeKeysRecursively: (obj: any, keys: string[]) => any = (obj, keys) =>
-    obj !== Object(obj)
-      ? obj
-      : Array.isArray(obj)
-      ? obj.map((item) => removeKeysRecursively(item, keys))
-      : Object.fromEntries(
-          Object.entries(obj)
-            // .map(([k, v]) => [k, removeKeysRecursively(v, keys)])
-            .filter(([k]) => !keys.includes(k)),
-        );
+  const removeKeysRecursively: (obj: any, keysToRemove: string[]) => any = (obj, keysToRemove) => {
+    return Object.keys(obj).reduce<any>((acc, key) => {
+      // if the value of the current key is another object,
+      // make a recursive call to remove the
+      // key from the nested object
+      if (!keysToRemove.includes(key)) {
+        acc[key] = obj[key];
+      }
+      // if the current key is not the key that is to be removed,
+      // add the current key and its value in the accumulator
+      // object
+      else if (typeof obj[key] === "object") {
+        acc[key] = removeKeysRecursively(obj[key], keysToRemove);
+      }
+      return acc;
+    }, {});
+  }
 
   return JSON.parse(
     JSON.stringify(removeKeysRecursively(data, stripKeys), (name, value) => {
