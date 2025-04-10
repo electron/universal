@@ -620,6 +620,222 @@ exports[`makeUniversalApp force packages successfully if \`out\` bundle already 
 }
 `;
 
+exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 1`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+        ],
+        "hash": "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+      },
+      "size": 1063,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+        ],
+        "hash": "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+      },
+      "size": 33,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 2`] = `
+[
+  "private/var/i-aint-got-no-rhythm.bin",
+]
+`;
+
+exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 3`] = `
+[
+  "hello-world",
+  "index.js",
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+  {
+    "content": "hello world",
+    "name": "private/var/file.txt",
+  },
+  "private/var/i-aint-got-no-rhythm.bin",
+]
+`;
+
+exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 4`] = `
+[
+  "hello-world",
+  "index.js",
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+  {
+    "content": "hello world",
+    "name": "private/var/file.txt",
+  },
+  "private/var/hello-world.bin",
+]
+`;
+
+exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 5`] = `
+{
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "<stripped>",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 1`] = `
+{
+  "files": {
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+        ],
+        "hash": "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+      },
+      "size": 1063,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+        ],
+        "hash": "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+      },
+      "size": 33,
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 2`] = `
+[
+  "private/var/i-aint-got-no-rhythm.bin",
+]
+`;
+
+exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 3`] = `
+[
+  "hello-world",
+  "index.js",
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+  {
+    "content": "hello world",
+    "name": "private/var/file.txt",
+  },
+  "private/var/i-aint-got-no-rhythm.bin",
+]
+`;
+
+exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 4`] = `
+[
+  "hello-world",
+  "index.js",
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+  {
+    "content": "hello world",
+    "name": "private/var/file.txt",
+  },
+  "private/var/hello-world.bin",
+]
+`;
+
+exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 5`] = `
+{
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "<stripped>",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp no asar mode identical app dirs with different macho files (e.g. do not shim, but still lipo) 1`] = `
+[
+  "hello-world",
+  "index.js",
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+  {
+    "content": "hello world",
+    "name": "private/var/file.txt",
+  },
+]
+`;
+
+exports[`makeUniversalApp no asar mode identical app dirs with different macho files (e.g. do not shim, but still lipo) 2`] = `
+{
+  "Contents/Info.plist": {},
+}
+`;
+
+exports[`makeUniversalApp no asar mode identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir) 1`] = `
+[
+  "hello-world",
+  "index.js",
+  {
+    "content": "{
+  "name": "app",
+  "main": "index.js"
+}",
+    "name": "package.json",
+  },
+  {
+    "content": "hello world",
+    "name": "private/var/file.txt",
+  },
+]
+`;
+
+exports[`makeUniversalApp no asar mode identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir) 2`] = `
+{
+  "Contents/Info.plist": {},
+}
+`;
+
 exports[`makeUniversalApp no asar mode should correctly merge two identical app folders 1`] = `
 [
   "index.js",
@@ -716,6 +932,84 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 5`]
     "Resources/app.asar": {
       "algorithm": "SHA256",
       "hash": "27433ee3e34b3b0dabb29d18d40646126e80c56dbce8c4bb2adef7278b5a46c0",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp works for lipo binary resources 1`] = `
+{
+  "files": {
+    "hello-world": "<stripped>",
+    "index.js": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+        ],
+        "hash": "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+      },
+      "size": 66,
+    },
+    "package.json": {
+      "integrity": {
+        "algorithm": "SHA256",
+        "blockSize": 4194304,
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
+        "hash": "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+      },
+      "size": 41,
+    },
+    "private": {
+      "files": {
+        "var": {
+          "files": {
+            "app": {
+              "files": {
+                "file.txt": {
+                  "link": "private/var/file.txt",
+                },
+              },
+            },
+            "file.txt": {
+              "integrity": {
+                "algorithm": "SHA256",
+                "blockSize": 4194304,
+                "blocks": [
+                  "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+                ],
+                "hash": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+              },
+              "size": 11,
+            },
+          },
+        },
+      },
+    },
+    "var": {
+      "link": "private/var",
+    },
+  },
+}
+`;
+
+exports[`makeUniversalApp works for lipo binary resources 2`] = `[]`;
+
+exports[`makeUniversalApp works for lipo binary resources 3`] = `
+[
+  "hello-world",
+]
+`;
+
+exports[`makeUniversalApp works for lipo binary resources 4`] = `
+{
+  "Contents/Info.plist": {
+    "Resources/app.asar": {
+      "algorithm": "SHA256",
+      "hash": "<stripped>",
     },
   },
 }
