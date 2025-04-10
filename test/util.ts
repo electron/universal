@@ -24,14 +24,15 @@ export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho =
 
   const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
   const resourcesDirContents = await fs.readdir(resourcesDir);
-  const ignoreKeys = containsRuntimeGeneratedMacho ? ['hash'] : [];
 
   // sort for consistent result
   const asars = resourcesDirContents.filter((p) => p.endsWith('.asar')).sort();
   for await (const asar of asars) {
     // verify header
     const asarFs = getRawHeader(path.resolve(resourcesDir, asar));
-    expect(removeUnstableProperties(asarFs.header, ignoreKeys)).toMatchSnapshot();
+    expect(
+      removeUnstableProperties(asarFs.header, containsRuntimeGeneratedMacho ? ['hello-world'] : []),
+    ).toMatchSnapshot();
   }
 
   // check all app and unpacked dirs (incl. shimmed)
@@ -70,7 +71,7 @@ export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho =
     const asarIntegrity = integrity[i];
     // note: `infoPlistsToIgnore` will not have integrity in sub-app plists
     integrityMap[relativePath] = asarIntegrity
-      ? removeUnstableProperties(asarIntegrity, ignoreKeys)
+      ? removeUnstableProperties(asarIntegrity, containsRuntimeGeneratedMacho ? ['hash'] : [])
       : undefined;
   }
   expect(integrityMap).toMatchSnapshot();
