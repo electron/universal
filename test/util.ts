@@ -111,20 +111,17 @@ export const toSystemIndependentPath = (s: string): string => {
 
 export const removeUnstableProperties = (data: any, stripKeys: string[]) => {
   const removeKeysRecursively: (obj: any, keysToRemove: string[]) => any = (obj, keysToRemove) => {
-    if (!obj || Array.isArray(obj)) {
+    if (!obj || typeof obj !== 'object') {
       return obj;
     }
+    // if the value is an array, map over it
+    if (Array.isArray(obj)) {
+      return obj.map((item: any) => removeKeysRecursively(item, keysToRemove));
+    }
     return Object.keys(obj).reduce<any>((acc, key) => {
-      // if the value of the current key is another object,
-      // make a recursive call to remove the
-      // key from the nested object
-      const value = obj[key];
+      // if the value of the current key is another object, make a recursive call to remove the key from the nested object
       if (!keysToRemove.includes(key)) {
-        if (typeof value === 'object') {
-          acc[key] = removeKeysRecursively(value, keysToRemove);
-        } else {
-          acc[key] = value;
-        }
+        acc[key] = removeKeysRecursively(obj[key], keysToRemove);
       } else {
         acc[key] = '<stripped>';
       }
