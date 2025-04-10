@@ -6,7 +6,6 @@ import * as path from 'path';
 import plist from 'plist';
 import * as fileUtils from '../dist/cjs/file-utils';
 import { createPackageWithOptions, getRawHeader } from '@electron/asar';
-import { determineFileType } from '@electron/asar/lib/crawlfs';
 
 declare const expect: typeof import('@jest/globals').expect;
 
@@ -25,7 +24,7 @@ export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho =
 
   const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
   const resourcesDirContents = await fs.readdir(resourcesDir);
-  const ignoreKeys = containsRuntimeGeneratedMacho ? ['hello-world'] : [];
+  const ignoreKeys = containsRuntimeGeneratedMacho ? ['hash'] : [];
 
   // sort for consistent result
   const asars = resourcesDirContents.filter((p) => p.endsWith('.asar')).sort();
@@ -71,7 +70,7 @@ export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho =
     const asarIntegrity = integrity[i];
     // note: `infoPlistsToIgnore` will not have integrity in sub-app plists
     integrityMap[relativePath] = asarIntegrity
-      ? removeUnstableProperties(asarIntegrity, ['hash'])
+      ? removeUnstableProperties(asarIntegrity, ignoreKeys)
       : undefined;
   }
   expect(integrityMap).toMatchSnapshot();
@@ -111,25 +110,30 @@ export const toSystemIndependentPath = (s: string): string => {
 
 export const removeUnstableProperties = (data: any, stripKeys: string[]) => {
   const removeKeysRecursively: (obj: any, keysToRemove: string[]) => any = (obj, keysToRemove) => {
+    if (!obj || Array.isArray(obj)) {
+      return obj;
+    }
     return Object.keys(obj).reduce<any>((acc, key) => {
       // if the value of the current key is another object,
       // make a recursive call to remove the
       // key from the nested object
+      const value = obj[key];
       if (!keysToRemove.includes(key)) {
-        acc[key] = obj[key];
-      }
-      // if the current key is not the key that is to be removed,
-      // add the current key and its value in the accumulator
-      // object
-      else if (typeof obj[key] === "object") {
-        acc[key] = removeKeysRecursively(obj[key], keysToRemove);
+        if (typeof value === 'object') {
+          acc[key] = removeKeysRecursively(value, keysToRemove);
+        } else {
+          acc[key] = value;
+        }
+      } else {
+        acc[key] = '<stripped>';
       }
       return acc;
     }, {});
-  }
+  };
 
+  const filteredData = removeKeysRecursively(data, stripKeys);
   return JSON.parse(
-    JSON.stringify(removeKeysRecursively(data, stripKeys), (name, value) => {
+    JSON.stringify(filteredData, (name, value) => {
       if (name === 'offset') {
         return undefined;
       }

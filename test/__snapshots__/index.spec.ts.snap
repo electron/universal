@@ -627,7 +627,9 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
+        "blocks": [
+          "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+        ],
         "hash": "<stripped>",
       },
       "size": 1063,
@@ -636,7 +638,9 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
+        "blocks": [
+          "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+        ],
         "hash": "<stripped>",
       },
       "size": 33,
@@ -707,7 +711,9 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
+        "blocks": [
+          "f1e14240f7c833900fca84fabc2f0ff27084efdf1c5b228b015515de3f8fa28e",
+        ],
         "hash": "<stripped>",
       },
       "size": 1063,
@@ -716,7 +722,9 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
+        "blocks": [
+          "2873266521e41d58d02e7acfbbbdb046edfa04b6ce262b8987de8e8548671fc7",
+        ],
         "hash": "<stripped>",
       },
       "size": 33,
@@ -936,7 +944,9 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
+        "blocks": [
+          "bb775443c1c6bbc9c06580111e671319a9f67cc8d3fec9443a3ee6450b443a66",
+        ],
         "hash": "<stripped>",
       },
       "size": 49824,
@@ -946,7 +956,9 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
+        "blocks": [
+          "0f6311dac07f0876c436ce2be042eb88c96e17eaf140b39627cf720dd87ad5b8",
+        ],
         "hash": "<stripped>",
       },
       "size": 66,
@@ -955,7 +967,9 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
       "integrity": {
         "algorithm": "SHA256",
         "blockSize": 4194304,
-        "blocks": "<stripped>",
+        "blocks": [
+          "d6226276d47adc7aa20e6c46e842e258f5157313074a035051a89612acdd6be3",
+        ],
         "hash": "<stripped>",
       },
       "size": 41,
@@ -975,7 +989,9 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
               "integrity": {
                 "algorithm": "SHA256",
                 "blockSize": 4194304,
-                "blocks": "<stripped>",
+                "blocks": [
+                  "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+                ],
                 "hash": "<stripped>",
               },
               "size": 11,
