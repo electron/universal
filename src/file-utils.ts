@@ -45,7 +45,9 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
           throw e;
         }
       }
-      if (p.endsWith('.asar')) {
+      // Need to match both e.g. `Contents/Resources/app.asar` and
+      // `Contents/Resources/app.asar.unpacked/node_modules/fsevents/fsevents.node`
+      if (p.endsWith('.asar') || p.includes('.asar.unpacked/')) {
         fileType = AppFileType.APP_CODE;
       } else if (fileOutput.startsWith(MACHO_PREFIX)) {
         fileType = AppFileType.MACHO;
