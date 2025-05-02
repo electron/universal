@@ -148,14 +148,13 @@ export const mergeASARs = async ({
     const x64Content = asar.extractFile(x64AsarPath, file);
     const arm64Content = asar.extractFile(arm64AsarPath, file);
 
+    // Skip file if the same content
     if (x64Content.compare(arm64Content) === 0) {
       continue;
     }
 
-    if (
-      MACHO_UNIVERSAL_MAGIC.has(x64Content.readUInt32LE(0)) &&
-      MACHO_UNIVERSAL_MAGIC.has(arm64Content.readUInt32LE(0))
-    ) {
+    // Skip universal Mach-O files.
+    if (isUniversalMachO(x64Content)) {
       continue;
     }
 
@@ -222,4 +221,8 @@ export const mergeASARs = async ({
   } finally {
     await Promise.all([fs.remove(x64Dir), fs.remove(arm64Dir)]);
   }
+};
+
+export const isUniversalMachO = (fileContent: Buffer) => {
+  return MACHO_UNIVERSAL_MAGIC.has(fileContent.readUInt32LE(0));
 };

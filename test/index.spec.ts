@@ -2,7 +2,13 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import { makeUniversalApp } from '../dist/cjs/index';
-import { createTestApp, templateApp, VERIFY_APP_TIMEOUT, verifyApp } from './util';
+import {
+  createStagingAppDir,
+  generateNativeApp,
+  templateApp,
+  VERIFY_APP_TIMEOUT,
+  verifyApp,
+} from './util';
 import { createPackage, createPackageWithOptions } from '@electron/asar';
 import { afterEach, describe, expect, it } from '@jest/globals';
 
@@ -28,7 +34,26 @@ describe('makeUniversalApp', () => {
     );
   });
 
-  it.todo('works for lipo binary resources');
+  it(
+    'works for lipo binary resources',
+    async () => {
+      const x64AppPath = await generateNativeApp({
+        appNameWithExtension: 'LipoX64.app',
+        arch: 'x64',
+        createAsar: true,
+      });
+      const arm64AppPath = await generateNativeApp({
+        appNameWithExtension: 'LipoArm64.app',
+        arch: 'arm64',
+        createAsar: true,
+      });
+
+      const out = path.resolve(appsOutPath, 'Lipo.app');
+      await makeUniversalApp({ x64AppPath, arm64AppPath, outAppPath: out, mergeASARs: true });
+      await verifyApp(out, true);
+    },
+    VERIFY_APP_TIMEOUT,
+  );
 
   describe('force', () => {
     it('throws an error if `out` bundle already exists and `force` is `false`', async () => {
@@ -46,7 +71,7 @@ describe('makeUniversalApp', () => {
     it(
       'packages successfully if `out` bundle already exists and `force` is `true`',
       async () => {
-        const out = path.resolve(appsOutPath, 'Error.app');
+        const out = path.resolve(appsOutPath, 'NoError.app');
         await fs.mkdirp(out);
         await makeUniversalApp({
           x64AppPath: path.resolve(appsPath, 'X64Asar.app'),
@@ -126,7 +151,7 @@ describe('makeUniversalApp', () => {
       'should not inject ElectronAsarIntegrity into `infoPlistsToIgnore`',
       async () => {
         const arm64AppPath = await templateApp('Arm64-1.app', 'arm64', async (appPath) => {
-          const { testPath } = await createTestApp('Arm64-1');
+          const { testPath } = await createStagingAppDir('Arm64-1');
           await createPackage(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
           await templateApp('SubApp-1.app', 'arm64', async (subArm64AppPath) => {
             await fs.move(
@@ -136,7 +161,7 @@ describe('makeUniversalApp', () => {
           });
         });
         const x64AppPath = await templateApp('X64-1.app', 'x64', async (appPath) => {
-          const { testPath } = await createTestApp('X64-1');
+          const { testPath } = await createStagingAppDir('X64-1');
           await createPackage(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
           await templateApp('SubApp-1.app', 'x64', async (subArm64AppPath) => {
             await fs.move(
@@ -165,7 +190,7 @@ describe('makeUniversalApp', () => {
       'should shim asars with different unpacked dirs',
       async () => {
         const arm64AppPath = await templateApp('UnpackedArm64.app', 'arm64', async (appPath) => {
-          const { testPath } = await createTestApp('UnpackedAppArm64');
+          const { testPath } = await createStagingAppDir('UnpackedAppArm64');
           await createPackageWithOptions(
             testPath,
             path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
@@ -177,7 +202,7 @@ describe('makeUniversalApp', () => {
         });
 
         const x64AppPath = await templateApp('UnpackedX64.app', 'x64', async (appPath) => {
-          const { testPath } = await createTestApp('UnpackedAppX64');
+          const { testPath } = await createStagingAppDir('UnpackedAppX64');
           await createPackageWithOptions(
             testPath,
             path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
@@ -199,7 +224,7 @@ describe('makeUniversalApp', () => {
     it(
       'should generate AsarIntegrity for all asars in the application',
       async () => {
-        const { testPath } = await createTestApp('app-2');
+        const { testPath } = await createStagingAppDir('app-2');
         const testAsarPath = path.resolve(appsOutPath, 'app-2.asar');
         await createPackage(testPath, testAsarPath);
 
@@ -255,14 +280,16 @@ describe('makeUniversalApp', () => {
       'should shim two different app folders',
       async () => {
         const arm64AppPath = await templateApp('ShimArm64.app', 'arm64', async (appPath) => {
-          const { testPath } = await createTestApp('shimArm64', {
+          const { testPath } = await createStagingAppDir('shimArm64', {
             'i-aint-got-no-rhythm.bin': 'boomshakalaka',
           });
           await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
         });
 
         const x64AppPath = await templateApp('ShimX64.app', 'x64', async (appPath) => {
-          const { testPath } = await createTestApp('shimX64', { 'hello-world.bin': 'Hello World' });
+          const { testPath } = await createStagingAppDir('shimX64', {
+            'hello-world.bin': 'Hello World',
+          });
           await fs.copy(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app'));
         });
 
@@ -276,9 +303,117 @@ describe('makeUniversalApp', () => {
       },
       VERIFY_APP_TIMEOUT,
     );
-  });
 
-  // TODO: Add tests for
-  // * different app dirs with different macho files
-  // * identical app dirs with universal macho files
+    it(
+      'different app dirs with different macho files (shim and lipo)',
+      async () => {
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentMachoAppX64-1.app',
+          arch: 'x64',
+          createAsar: false,
+          additionalFiles: {
+            'hello-world.bin': 'Hello World',
+          },
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentMachoAppArm64-1.app',
+          arch: 'arm64',
+          createAsar: false,
+          additionalFiles: {
+            'i-aint-got-no-rhythm.bin': 'boomshakalaka',
+          },
+        });
+
+        const outAppPath = path.resolve(appsOutPath, 'DifferentMachoApp1.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
+        });
+        await verifyApp(outAppPath, true);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+
+    it(
+      "different app dirs with universal macho files (shim but don't lipo)",
+      async () => {
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentButUniversalMachoAppX64-2.app',
+          arch: 'x64',
+          createAsar: false,
+          nativeModuleArch: 'universal',
+          additionalFiles: {
+            'hello-world.bin': 'Hello World',
+          },
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentButUniversalMachoAppArm64-2.app',
+          arch: 'arm64',
+          createAsar: false,
+          nativeModuleArch: 'universal',
+          additionalFiles: {
+            'i-aint-got-no-rhythm.bin': 'boomshakalaka',
+          },
+        });
+
+        const outAppPath = path.resolve(appsOutPath, 'DifferentButUniversalMachoApp.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath,
+        });
+        await verifyApp(outAppPath, true);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+
+    it(
+      'identical app dirs with different macho files (e.g. do not shim, but still lipo)',
+      async () => {
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentMachoAppX64-2.app',
+          arch: 'x64',
+          createAsar: false,
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'DifferentMachoAppArm64-2.app',
+          arch: 'arm64',
+          createAsar: false,
+        });
+
+        const out = path.resolve(appsOutPath, 'DifferentMachoApp2.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath: out,
+        });
+        await verifyApp(out, true);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+
+    it(
+      'identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir)',
+      async () => {
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'UniversalMachoAppX64.app',
+          arch: 'x64',
+          createAsar: false,
+          nativeModuleArch: 'universal',
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'UniversalMachoAppArm64.app',
+          arch: 'arm64',
+          createAsar: false,
+          nativeModuleArch: 'universal',
+        });
+
+        const out = path.resolve(appsOutPath, 'UniversalMachoApp.app');
+        await makeUniversalApp({ x64AppPath, arm64AppPath, outAppPath: out });
+        await verifyApp(out, true);
+      },
+      VERIFY_APP_TIMEOUT,
+    );
+  });
 });

@@ -1,14 +1,14 @@
-import { spawn } from '@malept/cross-spawn-promise';
 import * as asar from '@electron/asar';
+import { spawn } from '@malept/cross-spawn-promise';
+import * as dircompare from 'dir-compare';
 import * as fs from 'fs-extra';
 import { minimatch } from 'minimatch';
 import * as os from 'os';
 import * as path from 'path';
 import * as plist from 'plist';
-import * as dircompare from 'dir-compare';
 
-import { AppFile, AppFileType, getAllAppFiles } from './file-utils';
-import { AsarMode, detectAsarMode, mergeASARs } from './asar-utils';
+import { AsarMode, detectAsarMode, isUniversalMachO, mergeASARs } from './asar-utils';
+import { AppFile, AppFileType, getAllAppFiles, readMachOHeader } from './file-utils';
 import { sha } from './sha';
 import { d } from './debug';
 import { computeIntegrityData } from './integrity';
@@ -161,6 +161,15 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
     for (const machOFile of x64Files.filter((f) => f.type === AppFileType.MACHO)) {
       const first = await fs.realpath(path.resolve(tmpApp, machOFile.relativePath));
       const second = await fs.realpath(path.resolve(opts.arm64AppPath, machOFile.relativePath));
+
+      if (
+        isUniversalMachO(await readMachOHeader(first)) &&
+        isUniversalMachO(await readMachOHeader(second))
+      ) {
+        d(machOFile.relativePath, `is already universal across builds, skipping lipo`);
+        knownMergedMachOFiles.add(machOFile.relativePath);
+        continue;
+      }
 
       const x64Sha = await sha(path.resolve(opts.x64AppPath, machOFile.relativePath));
       const arm64Sha = await sha(path.resolve(opts.arm64AppPath, machOFile.relativePath));
