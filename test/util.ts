@@ -1,29 +1,31 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { createPackageWithOptions, getRawHeader } from '@electron/asar';
 import { downloadArtifact } from '@electron/get';
 import { spawn } from '@malept/cross-spawn-promise';
 import * as zip from 'cross-zip';
-import * as fs from 'fs-extra';
-import * as path from 'path';
 import plist from 'plist';
-import * as fileUtils from '../dist/cjs/file-utils';
-import { createPackageWithOptions, getRawHeader } from '@electron/asar';
 
-declare const expect: typeof import('@jest/globals').expect;
+import * as fileUtils from '../dist/file-utils.js';
 
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
 // plus some tests create fixtures at runtime
 export const VERIFY_APP_TIMEOUT = 80 * 1000;
 
-export const fixtureDir = path.resolve(__dirname, 'fixtures');
+export const fixtureDir = path.resolve(import.meta.dirname, 'fixtures');
 export const asarsDir = path.resolve(fixtureDir, 'asars');
 export const appsDir = path.resolve(fixtureDir, 'apps');
 export const appsOutPath = path.resolve(appsDir, 'out');
 
 export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho = false) => {
+  const { expect } = await import('vitest');
+
   await ensureUniversal(appPath);
 
   const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
-  const resourcesDirContents = await fs.readdir(resourcesDir);
+  const resourcesDirContents = await fs.promises.readdir(resourcesDir);
 
   // sort for consistent result
   const asars = resourcesDirContents.filter((p) => p.endsWith('.asar')).sort();
@@ -79,12 +81,14 @@ export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho =
 
 const extractAsarIntegrity = async (infoPlist: string) => {
   const { ElectronAsarIntegrity: integrity, ...otherData } = plist.parse(
-    await fs.readFile(infoPlist, 'utf-8'),
+    await fs.promises.readFile(infoPlist, 'utf-8'),
   ) as any;
   return integrity;
 };
 
 export const verifyFileTree = async (dirPath: string) => {
+  const { expect } = await import('vitest');
+
   const dirFiles = await fileUtils.getAllAppFiles(dirPath);
   const files = dirFiles.map((file) => {
     const it = path.join(dirPath, file.relativePath);
@@ -98,6 +102,8 @@ export const verifyFileTree = async (dirPath: string) => {
 };
 
 export const ensureUniversal = async (app: string) => {
+  const { expect } = await import('vitest');
+
   const exe = path.resolve(app, 'Contents', 'MacOS', 'Electron');
   const result = await spawn(exe);
   expect(result).toContain('arm64');
@@ -162,15 +168,18 @@ export const createStagingAppDir = async (
 ) => {
   const outDir = (testName || 'app') + Math.floor(Math.random() * 100); // tests run in parallel, randomize dir suffix to prevent naming collisions
   const testPath = path.join(appsDir, outDir);
-  await fs.remove(testPath);
+  await fs.promises.rm(testPath, { recursive: true, force: true });
 
-  await fs.copy(path.join(asarsDir, 'app'), testPath);
+  await fs.promises.cp(path.join(asarsDir, 'app'), testPath, {
+    recursive: true,
+    verbatimSymlinks: true,
+  });
 
   const privateVarPath = path.join(testPath, 'private', 'var');
   const varPath = path.join(testPath, 'var');
 
-  await fs.mkdir(privateVarPath, { recursive: true });
-  await fs.symlink(path.relative(testPath, privateVarPath), varPath);
+  await fs.promises.mkdir(privateVarPath, { recursive: true });
+  await fs.promises.symlink(path.relative(testPath, privateVarPath), varPath);
 
   const files = {
     'file.txt': 'hello world',
@@ -178,11 +187,11 @@ export const createStagingAppDir = async (
   };
   for await (const [filename, fileData] of Object.entries(files)) {
     const originFilePath = path.join(varPath, filename);
-    await fs.writeFile(originFilePath, fileData);
+    await fs.promises.writeFile(originFilePath, fileData);
   }
   const appPath = path.join(varPath, 'app');
-  await fs.mkdirp(appPath);
-  await fs.symlink('../file.txt', path.join(appPath, 'file.txt'));
+  await fs.promises.mkdir(appPath, { recursive: true });
+  await fs.promises.symlink('../file.txt', path.join(appPath, 'file.txt'));
 
   return {
     testPath,
@@ -204,8 +213,11 @@ export const templateApp = async (
   });
   const appPath = path.resolve(appsDir, name);
   zip.unzipSync(electronZip, appsDir);
-  await fs.rename(path.resolve(appsDir, 'Electron.app'), appPath);
-  await fs.remove(path.resolve(appPath, 'Contents', 'Resources', 'default_app.asar'));
+  await fs.promises.rename(path.resolve(appsDir, 'Electron.app'), appPath);
+  await fs.promises.rm(path.resolve(appPath, 'Contents', 'Resources', 'default_app.asar'), {
+    recursive: true,
+    force: true,
+  });
   await modify(appPath);
 
   return appPath;
@@ -229,22 +241,23 @@ export const generateNativeApp = async (options: {
     const resources = path.join(appPath, 'Contents', 'Resources');
     const resourcesApp = path.resolve(resources, 'app');
     if (!fs.existsSync(resourcesApp)) {
-      await fs.mkdir(resourcesApp);
+      await fs.promises.mkdir(resourcesApp, { recursive: true });
     }
     const { testPath } = await createStagingAppDir(
       path.basename(appNameWithExtension, '.app'),
       additionalFiles,
     );
-    await fs.copy(
+    await fs.promises.cp(
       path.join(appsDir, `hello-world-${nativeModuleArch}`),
       path.join(testPath, 'hello-world'),
+      { recursive: true, verbatimSymlinks: true },
     );
     if (createAsar) {
       await createPackageWithOptions(testPath, path.resolve(resources, 'app.asar'), {
         unpack: '**/hello-world',
       });
     } else {
-      await fs.copy(testPath, resourcesApp);
+      await fs.promises.cp(testPath, resourcesApp, { recursive: true, verbatimSymlinks: true });
     }
   });
   return appPath;

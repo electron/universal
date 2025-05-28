@@ -1,10 +1,11 @@
-import * as path from 'path';
+import * as path from 'node:path';
 
-import { AsarMode, detectAsarMode, generateAsarIntegrity } from '../src/asar-utils';
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
-const asarsPath = path.resolve(__dirname, 'fixtures', 'asars');
-const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
+import { AsarMode, detectAsarMode, generateAsarIntegrity } from '../src/asar-utils.js';
+
+const asarsPath = path.resolve(import.meta.dirname, 'fixtures', 'asars');
+const appsPath = path.resolve(import.meta.dirname, 'fixtures', 'apps');
 
 describe('asar-utils', () => {
   describe('detectAsarMode', () => {

@@ -1,9 +1,10 @@
-import * as path from 'path';
+import * as path from 'node:path';
 
-import { AppFile, AppFileType, getAllAppFiles } from '../src/file-utils';
-import { beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from 'vitest';
 
-const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
+import { AppFile, AppFileType, getAllAppFiles } from '../src/file-utils.js';
+
+const appsPath = path.resolve(import.meta.dirname, 'fixtures', 'apps');
 
 describe('file-utils', () => {
   describe('getAllAppFiles', () => {

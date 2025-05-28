@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`makeUniversalApp asar mode should correctly merge two identical asars 1`] = `
+exports[`makeUniversalApp > asar mode > should correctly merge two identical asars 1`] = `
 {
   "files": {
     "index.js": {
@@ -29,7 +29,7 @@ exports[`makeUniversalApp asar mode should correctly merge two identical asars 1
 }
 `;
 
-exports[`makeUniversalApp asar mode should correctly merge two identical asars 2`] = `
+exports[`makeUniversalApp > asar mode > should correctly merge two identical asars 2`] = `
 {
   "Contents/Info.plist": {
     "Resources/app.asar": {
@@ -40,7 +40,7 @@ exports[`makeUniversalApp asar mode should correctly merge two identical asars 2
 }
 `;
 
-exports[`makeUniversalApp asar mode should create a shim if asars are different between architectures 1`] = `
+exports[`makeUniversalApp > asar mode > should create a shim if asars are different between architectures 1`] = `
 {
   "files": {
     "extra-file.txt": {
@@ -80,7 +80,7 @@ exports[`makeUniversalApp asar mode should create a shim if asars are different 
 }
 `;
 
-exports[`makeUniversalApp asar mode should create a shim if asars are different between architectures 2`] = `
+exports[`makeUniversalApp > asar mode > should create a shim if asars are different between architectures 2`] = `
 {
   "files": {
     "index.js": {
@@ -109,7 +109,7 @@ exports[`makeUniversalApp asar mode should create a shim if asars are different 
 }
 `;
 
-exports[`makeUniversalApp asar mode should create a shim if asars are different between architectures 3`] = `
+exports[`makeUniversalApp > asar mode > should create a shim if asars are different between architectures 3`] = `
 {
   "files": {
     "index.js": {
@@ -138,7 +138,7 @@ exports[`makeUniversalApp asar mode should create a shim if asars are different 
 }
 `;
 
-exports[`makeUniversalApp asar mode should create a shim if asars are different between architectures 4`] = `
+exports[`makeUniversalApp > asar mode > should create a shim if asars are different between architectures 4`] = `
 {
   "Contents/Info.plist": {
     "Resources/app-arm64.asar": {
@@ -157,7 +157,7 @@ exports[`makeUniversalApp asar mode should create a shim if asars are different 
 }
 `;
 
-exports[`makeUniversalApp asar mode should generate AsarIntegrity for all asars in the application 1`] = `
+exports[`makeUniversalApp > asar mode > should generate AsarIntegrity for all asars in the application 1`] = `
 {
   "files": {
     "index.js": {
@@ -215,7 +215,7 @@ exports[`makeUniversalApp asar mode should generate AsarIntegrity for all asars 
 }
 `;
 
-exports[`makeUniversalApp asar mode should generate AsarIntegrity for all asars in the application 2`] = `
+exports[`makeUniversalApp > asar mode > should generate AsarIntegrity for all asars in the application 2`] = `
 {
   "files": {
     "index.js": {
@@ -273,7 +273,7 @@ exports[`makeUniversalApp asar mode should generate AsarIntegrity for all asars 
 }
 `;
 
-exports[`makeUniversalApp asar mode should generate AsarIntegrity for all asars in the application 3`] = `
+exports[`makeUniversalApp > asar mode > should generate AsarIntegrity for all asars in the application 3`] = `
 {
   "Contents/Info.plist": {
     "Resources/app.asar": {
@@ -288,7 +288,7 @@ exports[`makeUniversalApp asar mode should generate AsarIntegrity for all asars 
 }
 `;
 
-exports[`makeUniversalApp asar mode should merge two different asars when \`mergeASARs\` is enabled 1`] = `
+exports[`makeUniversalApp > asar mode > should merge two different asars when \`mergeASARs\` is enabled 1`] = `
 {
   "files": {
     "extra-file.txt": {
@@ -328,7 +328,7 @@ exports[`makeUniversalApp asar mode should merge two different asars when \`merg
 }
 `;
 
-exports[`makeUniversalApp asar mode should merge two different asars when \`mergeASARs\` is enabled 2`] = `
+exports[`makeUniversalApp > asar mode > should merge two different asars when \`mergeASARs\` is enabled 2`] = `
 {
   "Contents/Info.plist": {
     "Resources/app.asar": {
@@ -339,7 +339,7 @@ exports[`makeUniversalApp asar mode should merge two different asars when \`merg
 }
 `;
 
-exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 1`] = `
+exports[`makeUniversalApp > asar mode > should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 1`] = `
 {
   "files": {
     "index.js": {
@@ -397,14 +397,14 @@ exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into
 }
 `;
 
-exports[`makeUniversalApp asar mode should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 2`] = `
+exports[`makeUniversalApp > asar mode > should not inject ElectronAsarIntegrity into \`infoPlistsToIgnore\` 2`] = `
 {
   "Contents/Info.plist": undefined,
   "Contents/Resources/SubApp-1.app/Contents/Info.plist": undefined,
 }
 `;
 
-exports[`makeUniversalApp force packages successfully if \`out\` bundle already exists and \`force\` is \`true\` 1`] = `
+exports[`makeUniversalApp > force > packages successfully if \`out\` bundle already exists and \`force\` is \`true\` 1`] = `
 {
   "files": {
     "index.js": {
@@ -433,7 +433,7 @@ exports[`makeUniversalApp force packages successfully if \`out\` bundle already 
 }
 `;
 
-exports[`makeUniversalApp force packages successfully if \`out\` bundle already exists and \`force\` is \`true\` 2`] = `
+exports[`makeUniversalApp > force > packages successfully if \`out\` bundle already exists and \`force\` is \`true\` 2`] = `
 {
   "Contents/Info.plist": {
     "Resources/app.asar": {
@@ -444,7 +444,7 @@ exports[`makeUniversalApp force packages successfully if \`out\` bundle already 
 }
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 1`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with different macho files (shim and lipo) 1`] = `
 {
   "files": {
     "index.js": {
@@ -473,13 +473,13 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
 }
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 2`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with different macho files (shim and lipo) 2`] = `
 [
   "private/var/i-aint-got-no-rhythm.bin",
 ]
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 3`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with different macho files (shim and lipo) 3`] = `
 [
   "hello-world",
   "index.js",
@@ -498,7 +498,7 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
 ]
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 4`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with different macho files (shim and lipo) 4`] = `
 [
   "hello-world",
   "index.js",
@@ -517,7 +517,7 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
 ]
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with different macho files (shim and lipo) 5`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with different macho files (shim and lipo) 5`] = `
 {
   "Contents/Info.plist": {
     "Resources/app.asar": {
@@ -528,7 +528,7 @@ exports[`makeUniversalApp no asar mode different app dirs with different macho f
 }
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 1`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with universal macho files (shim but don't lipo) 1`] = `
 {
   "files": {
     "index.js": {
@@ -557,13 +557,13 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
 }
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 2`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with universal macho files (shim but don't lipo) 2`] = `
 [
   "private/var/i-aint-got-no-rhythm.bin",
 ]
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 3`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with universal macho files (shim but don't lipo) 3`] = `
 [
   "hello-world",
   "index.js",
@@ -582,7 +582,7 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
 ]
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 4`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with universal macho files (shim but don't lipo) 4`] = `
 [
   "hello-world",
   "index.js",
@@ -601,7 +601,7 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
 ]
 `;
 
-exports[`makeUniversalApp no asar mode different app dirs with universal macho files (shim but don't lipo) 5`] = `
+exports[`makeUniversalApp > no asar mode > different app dirs with universal macho files (shim but don't lipo) 5`] = `
 {
   "Contents/Info.plist": {
     "Resources/app.asar": {
@@ -612,7 +612,7 @@ exports[`makeUniversalApp no asar mode different app dirs with universal macho f
 }
 `;
 
-exports[`makeUniversalApp no asar mode identical app dirs with different macho files (e.g. do not shim, but still lipo) 1`] = `
+exports[`makeUniversalApp > no asar mode > identical app dirs with different macho files (e.g. do not shim, but still lipo) 1`] = `
 [
   "hello-world",
   "index.js",
@@ -630,13 +630,13 @@ exports[`makeUniversalApp no asar mode identical app dirs with different macho f
 ]
 `;
 
-exports[`makeUniversalApp no asar mode identical app dirs with different macho files (e.g. do not shim, but still lipo) 2`] = `
+exports[`makeUniversalApp > no asar mode > identical app dirs with different macho files (e.g. do not shim, but still lipo) 2`] = `
 {
   "Contents/Info.plist": {},
 }
 `;
 
-exports[`makeUniversalApp no asar mode identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir) 1`] = `
+exports[`makeUniversalApp > no asar mode > identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir) 1`] = `
 [
   "hello-world",
   "index.js",
@@ -654,13 +654,13 @@ exports[`makeUniversalApp no asar mode identical app dirs with universal macho f
 ]
 `;
 
-exports[`makeUniversalApp no asar mode identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir) 2`] = `
+exports[`makeUniversalApp > no asar mode > identical app dirs with universal macho files (e.g., do not shim, just copy x64 dir) 2`] = `
 {
   "Contents/Info.plist": {},
 }
 `;
 
-exports[`makeUniversalApp no asar mode should correctly merge two identical app folders 1`] = `
+exports[`makeUniversalApp > no asar mode > should correctly merge two identical app folders 1`] = `
 [
   "index.js",
   {
@@ -673,13 +673,13 @@ exports[`makeUniversalApp no asar mode should correctly merge two identical app 
 ]
 `;
 
-exports[`makeUniversalApp no asar mode should correctly merge two identical app folders 2`] = `
+exports[`makeUniversalApp > no asar mode > should correctly merge two identical app folders 2`] = `
 {
   "Contents/Info.plist": {},
 }
 `;
 
-exports[`makeUniversalApp no asar mode should shim two different app folders 1`] = `
+exports[`makeUniversalApp > no asar mode > should shim two different app folders 1`] = `
 {
   "files": {
     "index.js": {
@@ -708,13 +708,13 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 1`]
 }
 `;
 
-exports[`makeUniversalApp no asar mode should shim two different app folders 2`] = `
+exports[`makeUniversalApp > no asar mode > should shim two different app folders 2`] = `
 [
   "private/var/i-aint-got-no-rhythm.bin",
 ]
 `;
 
-exports[`makeUniversalApp no asar mode should shim two different app folders 3`] = `
+exports[`makeUniversalApp > no asar mode > should shim two different app folders 3`] = `
 [
   "index.js",
   {
@@ -732,7 +732,7 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 3`]
 ]
 `;
 
-exports[`makeUniversalApp no asar mode should shim two different app folders 4`] = `
+exports[`makeUniversalApp > no asar mode > should shim two different app folders 4`] = `
 [
   "index.js",
   {
@@ -750,7 +750,7 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 4`]
 ]
 `;
 
-exports[`makeUniversalApp no asar mode should shim two different app folders 5`] = `
+exports[`makeUniversalApp > no asar mode > should shim two different app folders 5`] = `
 {
   "Contents/Info.plist": {
     "Resources/app.asar": {
@@ -761,7 +761,7 @@ exports[`makeUniversalApp no asar mode should shim two different app folders 5`]
 }
 `;
 
-exports[`makeUniversalApp works for lipo binary resources 1`] = `
+exports[`makeUniversalApp > works for lipo binary resources 1`] = `
 {
   "files": {
     "hello-world": "<stripped>",
@@ -820,15 +820,15 @@ exports[`makeUniversalApp works for lipo binary resources 1`] = `
 }
 `;
 
-exports[`makeUniversalApp works for lipo binary resources 2`] = `[]`;
+exports[`makeUniversalApp > works for lipo binary resources 2`] = `[]`;
 
-exports[`makeUniversalApp works for lipo binary resources 3`] = `
+exports[`makeUniversalApp > works for lipo binary resources 3`] = `
 [
   "hello-world",
 ]
 `;
 
-exports[`makeUniversalApp works for lipo binary resources 4`] = `
+exports[`makeUniversalApp > works for lipo binary resources 4`] = `
 {
   "Contents/Info.plist": {
     "Resources/app.asar": {

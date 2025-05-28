@@ -2,8 +2,8 @@
   "name": "@electron/universal",
   "version": "0.0.0-development",
   "description": "Utility for creating Universal macOS applications from two x64 and arm64 Electron applications",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
+  "type": "module",
+  "exports": "./dist/index.js",
   "license": "MIT",
   "keywords": [
     "electron",
@@ -15,7 +15,7 @@
     "url": "git+https://github.com/electron/universal.git"
   },
   "engines": {
-    "node": ">=16.4"
+    "node": ">=22.12.0"
   },
   "files": [
     "dist/*",
@@ -28,38 +28,36 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json && tsc -p tsconfig.entry-asar.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.entry-asar.json",
     "build:docs": "npx typedoc",
     "lint": "prettier --check \"{src,entry-asar,test}/**/*.ts\" \"*.ts\"",
     "prettier:write": "prettier --write \"{src,entry-asar,test}/**/*.ts\" \"*.ts\"",
     "prepublishOnly": "npm run build",
-    "test": "jest",
-    "prepare": "husky install"
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@electron/get": "^3.0.0",
+    "@electron/get": "^4.0.0",
+    "@tsconfig/node22": "^22.0.1",
     "@types/cross-zip": "^4.0.1",
     "@types/debug": "^4.1.10",
-    "@types/fs-extra": "^11.0.3",
-    "@types/jest": "^29.5.7",
     "@types/minimatch": "^5.1.2",
-    "@types/node": "^20.8.10",
+    "@types/node": "~22.10.7",
     "@types/plist": "^3.0.4",
     "cross-zip": "^4.0.0",
-    "husky": "^8.0.3",
-    "jest": "^29.7.0",
-    "lint-staged": "^15.2.10",
-    "prettier": "^3.0.3",
-    "ts-jest": "^29.1.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.0",
+    "prettier": "^3.5.3",
     "typedoc": "~0.25.13",
-    "typescript": "^5.2.2"
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.3"
   },
   "dependencies": {
-    "@electron/asar": "^3.3.1",
+    "@electron/asar": "^4.0.0",
     "@malept/cross-spawn-promise": "^2.0.0",
     "debug": "^4.3.1",
     "dir-compare": "^4.2.0",
-    "fs-extra": "^11.1.1",
     "minimatch": "^9.0.3",
     "plist": "^3.1.0"
   },
@@ -67,8 +65,5 @@
     "*.ts": [
       "prettier --write"
     ]
-  },
-  "resolutions": {
-    "jackspeak": "2.1.1"
   }
 }

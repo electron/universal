@@ -18,9 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - '20.5'
-          - '18.17'
-          - '16.20'
+          - 22.12.x
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -30,12 +28,8 @@ jobs:
         with:
           node-version: "${{ matrix.node-version }}"
           cache: 'yarn'
-      - name: Install (Node.js v18+)
-        if : ${{ matrix.node-version != '16.20' }}
+      - name: Install
         run: yarn install --frozen-lockfile
-      - name: Install (Node.js < v18)
-        if : ${{ matrix.node-version == '16.20' }}
-        run: yarn install --frozen-lockfile --ignore-engines
       - name: Build
         run: yarn build
       - name: Lint

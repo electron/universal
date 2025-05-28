@@ -1,8 +1,8 @@
-import * as fs from 'fs-extra';
-import path from 'path';
-import { AppFileType, getAllAppFiles } from './file-utils';
-import { sha } from './sha';
-import { generateAsarIntegrity } from './asar-utils';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { AppFileType, getAllAppFiles } from './file-utils.js';
+import { generateAsarIntegrity } from './asar-utils.js';
 
 type IntegrityMap = {
   [filepath: string]: string;
@@ -18,7 +18,7 @@ export interface AsarIntegrity {
 }
 
 export async function computeIntegrityData(contentsPath: string): Promise<AsarIntegrity> {
-  const root = await fs.realpath(contentsPath);
+  const root = await fs.promises.realpath(contentsPath);
 
   const resourcesRelativePath = 'Resources';
   const resourcesPath = path.resolve(root, resourcesRelativePath);
