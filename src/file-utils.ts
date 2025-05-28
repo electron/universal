@@ -1,7 +1,8 @@
-import { spawn, ExitCodeError } from '@malept/cross-spawn-promise';
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { promises as stream } from 'node:stream';
+
+import { spawn, ExitCodeError } from '@malept/cross-spawn-promise';
 
 const MACHO_PREFIX = 'Mach-O ';
 
@@ -27,11 +28,11 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
 
   const visited = new Set<string>();
   const traverse = async (p: string) => {
-    p = await fs.realpath(p);
+    p = await fs.promises.realpath(p);
     if (visited.has(p)) return;
     visited.add(p);
 
-    const info = await fs.stat(p);
+    const info = await fs.promises.stat(p);
     if (info.isSymbolicLink()) return;
     if (info.isFile()) {
       let fileType = AppFileType.PLAIN;
@@ -63,7 +64,7 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
     }
 
     if (info.isDirectory()) {
-      for (const child of await fs.readdir(p)) {
+      for (const child of await fs.promises.readdir(p)) {
         await traverse(path.resolve(p, child));
       }
     }
@@ -82,4 +83,22 @@ export const readMachOHeader = async (path: string) => {
     }
   });
   return Buffer.concat(chunks);
+};
+
+export const fsMove = async (oldPath: string, newPath: string) => {
+  try {
+    await fs.promises.rename(oldPath, newPath);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'EXDEV') {
+      // Cross-device link, fallback to copy and delete
+      await fs.promises.cp(oldPath, newPath, {
+        force: true,
+        recursive: true,
+        verbatimSymlinks: true,
+      });
+      await fs.promises.rm(oldPath, { force: true, recursive: true });
+    } else {
+      throw err;
+    }
+  }
 };
