@@ -345,7 +345,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         pj.main = 'index.js';
         await fs.promises.writeFile(
           path.resolve(entryAsar, 'package.json'),
-          JSON.stringify(pj, null, 2) + '\n',
+          JSON.stringify(pj) + '\n',
           'utf8',
         );
         const asarPath = path.resolve(tmpApp, 'Contents', 'Resources', 'app.asar');
