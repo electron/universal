@@ -6,7 +6,7 @@ import * as asar from '@electron/asar';
 import { spawn } from '@malept/cross-spawn-promise';
 import * as dircompare from 'dir-compare';
 import { minimatch } from 'minimatch';
-import * as plist from 'plist';
+import plist from 'plist';
 
 import { AsarMode, detectAsarMode, isUniversalMachO, mergeASARs } from './asar-utils.js';
 import { AppFile, AppFileType, fsMove, getAllAppFiles, readMachOHeader } from './file-utils.js';
