@@ -7,3 +7,4 @@ test/fixtures/apps
 coverage
 docs
 .vscode
+.yarn/install-state.gz
