@@ -17,13 +17,20 @@ export interface AsarIntegrity {
   [key: string]: HeaderHash;
 }
 
-export async function computeIntegrityData(contentsPath: string): Promise<AsarIntegrity> {
+export type ComputeIntegrityDataOpts = {
+  singleArchFiles?: string;
+};
+
+export async function computeIntegrityData(
+  contentsPath: string,
+  opts: ComputeIntegrityDataOpts,
+): Promise<AsarIntegrity> {
   const root = await fs.promises.realpath(contentsPath);
 
   const resourcesRelativePath = 'Resources';
   const resourcesPath = path.resolve(root, resourcesRelativePath);
 
-  const resources = await getAllAppFiles(resourcesPath);
+  const resources = await getAllAppFiles(resourcesPath, opts);
   const resourceAsars = resources
     .filter((file) => file.type === AppFileType.APP_CODE)
     .reduce<IntegrityMap>(
