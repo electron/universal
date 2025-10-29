@@ -143,6 +143,65 @@ describe('makeUniversalApp', () => {
     );
 
     it(
+      'should merge two different asars with native files when `mergeASARs` is enabled',
+      { timeout: VERIFY_APP_TIMEOUT },
+      async () => {
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'SingleArchFiles-x64.app',
+          arch: 'x64',
+          createAsar: true,
+          singleArchBindings: true,
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'SingleArchFiles-arm64.app',
+          arch: 'arm64',
+          createAsar: true,
+          singleArchBindings: true,
+        });
+        const out = path.resolve(appsOutPath, 'SingleArchFiles.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath: out,
+          mergeASARs: true,
+          singleArchFiles: 'hello-world-*',
+        });
+        await verifyApp(out, true);
+      },
+    );
+
+    it(
+      'throws an error if `mergeASARs` is enabled and `singleArchFiles` is missing a unique native file',
+      { timeout: VERIFY_APP_TIMEOUT },
+      async () => {
+        const x64AppPath = await generateNativeApp({
+          appNameWithExtension: 'SingleArchFiles-2-x64.app',
+          arch: 'x64',
+          createAsar: true,
+          singleArchBindings: true,
+        });
+        const arm64AppPath = await generateNativeApp({
+          appNameWithExtension: 'SingleArchFiles-2-arm64.app',
+          arch: 'arm64',
+          createAsar: true,
+          singleArchBindings: true,
+        });
+        const out = path.resolve(appsOutPath, 'SingleArchFiles-2.app');
+        await expect(
+          makeUniversalApp({
+            x64AppPath,
+            arm64AppPath,
+            outAppPath: out,
+            mergeASARs: true,
+            singleArchFiles: 'bad-rule',
+          }),
+        ).rejects.toThrow(
+          /the number of mach-o files is not the same between the arm64 and x64 builds/,
+        );
+      },
+    );
+
+    it(
       'should not inject ElectronAsarIntegrity into `infoPlistsToIgnore`',
       { timeout: VERIFY_APP_TIMEOUT },
       async () => {
