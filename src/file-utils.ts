@@ -1,8 +1,13 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { promises as stream } from 'node:stream';
+
 import { spawn, ExitCodeError } from '@malept/cross-spawn-promise';
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import { minimatch } from 'minimatch';
 
 const MACHO_PREFIX = 'Mach-O ';
+
+const UNPACKED_ASAR_PATH = path.join('Contents', 'Resources', 'app.asar.unpacked');
 
 export enum AppFileType {
   MACHO,
@@ -10,6 +15,7 @@ export enum AppFileType {
   INFO_PLIST,
   SNAPSHOT,
   APP_CODE,
+  SINGLE_ARCH,
 }
 
 export type AppFile = {
@@ -17,22 +23,50 @@ export type AppFile = {
   type: AppFileType;
 };
 
+export type GetAllAppFilesOpts = {
+  singleArchFiles?: string;
+};
+
+const isSingleArchFile = (relativePath: string, opts: GetAllAppFilesOpts): boolean => {
+  if (opts.singleArchFiles === undefined) {
+    return false;
+  }
+
+  const unpackedPath = path.relative(UNPACKED_ASAR_PATH, relativePath);
+
+  // Outside of app.asar.unpacked
+  if (unpackedPath.startsWith('..')) {
+    return false;
+  }
+
+  return minimatch(unpackedPath, opts.singleArchFiles, {
+    matchBase: true,
+  });
+};
+
 /**
  *
  * @param appPath Path to the application
  */
-export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
+export const getAllAppFiles = async (
+  appPath: string,
+  opts: GetAllAppFilesOpts,
+): Promise<AppFile[]> => {
+  const unpackedPath = path.join('Contents', 'Resources', 'app.asar.unpacked');
+
   const files: AppFile[] = [];
 
   const visited = new Set<string>();
   const traverse = async (p: string) => {
-    p = await fs.realpath(p);
+    p = await fs.promises.realpath(p);
     if (visited.has(p)) return;
     visited.add(p);
 
-    const info = await fs.stat(p);
+    const info = await fs.promises.stat(p);
     if (info.isSymbolicLink()) return;
     if (info.isFile()) {
+      const relativePath = path.relative(appPath, p);
+
       let fileType = AppFileType.PLAIN;
 
       var fileOutput = '';
@@ -45,8 +79,10 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
           throw e;
         }
       }
-      if (p.includes('app.asar')) {
+      if (p.endsWith('.asar')) {
         fileType = AppFileType.APP_CODE;
+      } else if (isSingleArchFile(relativePath, opts)) {
+        fileType = AppFileType.SINGLE_ARCH;
       } else if (fileOutput.startsWith(MACHO_PREFIX)) {
         fileType = AppFileType.MACHO;
       } else if (p.endsWith('.bin')) {
@@ -56,13 +92,13 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
       }
 
       files.push({
-        relativePath: path.relative(appPath, p),
+        relativePath,
         type: fileType,
       });
     }
 
     if (info.isDirectory()) {
-      for (const child of await fs.readdir(p)) {
+      for (const child of await fs.promises.readdir(p)) {
         await traverse(path.resolve(p, child));
       }
     }
@@ -70,4 +106,33 @@ export const getAllAppFiles = async (appPath: string): Promise<AppFile[]> => {
   await traverse(appPath);
 
   return files;
+};
+
+export const readMachOHeader = async (path: string) => {
+  const chunks: Buffer[] = [];
+  // no need to read the entire file, we only need the first 4 bytes of the file to determine the header
+  await stream.pipeline(fs.createReadStream(path, { start: 0, end: 3 }), async function* (source) {
+    for await (const chunk of source) {
+      chunks.push(chunk);
+    }
+  });
+  return Buffer.concat(chunks);
+};
+
+export const fsMove = async (oldPath: string, newPath: string) => {
+  try {
+    await fs.promises.rename(oldPath, newPath);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'EXDEV') {
+      // Cross-device link, fallback to copy and delete
+      await fs.promises.cp(oldPath, newPath, {
+        force: true,
+        recursive: true,
+        verbatimSymlinks: true,
+      });
+      await fs.promises.rm(oldPath, { force: true, recursive: true });
+    } else {
+      throw err;
+    }
+  }
 };

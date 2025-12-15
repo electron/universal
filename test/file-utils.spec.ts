@@ -1,8 +1,10 @@
-import * as path from 'path';
+import * as path from 'node:path';
 
-import { AppFile, AppFileType, getAllAppFiles } from '../src/file-utils';
+import { beforeAll, describe, expect, it } from 'vitest';
 
-const appsPath = path.resolve(__dirname, 'fixtures', 'apps');
+import { AppFile, AppFileType, getAllAppFiles } from '../src/file-utils.js';
+
+const appsPath = path.resolve(import.meta.dirname, 'fixtures', 'apps');
 
 describe('file-utils', () => {
   describe('getAllAppFiles', () => {
@@ -10,8 +12,8 @@ describe('file-utils', () => {
     let noAsarFiles: AppFile[];
 
     beforeAll(async () => {
-      asarFiles = await getAllAppFiles(path.resolve(appsPath, 'Arm64Asar.app'));
-      noAsarFiles = await getAllAppFiles(path.resolve(appsPath, 'Arm64NoAsar.app'));
+      asarFiles = await getAllAppFiles(path.resolve(appsPath, 'Arm64Asar.app'), {});
+      noAsarFiles = await getAllAppFiles(path.resolve(appsPath, 'Arm64NoAsar.app'), {});
     });
 
     it('should correctly identify plist files', async () => {

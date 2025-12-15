@@ -2,8 +2,9 @@
 
 > Create universal macOS Electron applications
 
-[![CircleCI](https://circleci.com/gh/electron/universal/tree/main.svg?style=shield)](https://circleci.com/gh/electron/universal)
+[![Test](https://github.com/electron/universal/actions/workflows/test.yml/badge.svg)](https://github.com/electron/universal/actions/workflows/test.yml)
 [![NPM package](https://img.shields.io/npm/v/@electron/universal)](https://npm.im/@electron/universal)
+[![API docs](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.npmjs.org%2F%40electron%2Funiversal%2Flatest&query=%24.version&logo=typescript&logoColor=white&label=API%20Docs)](https://packages.electronjs.org/universal)
 
 ## Usage
 
@@ -21,6 +22,8 @@ await makeUniversalApp({
   outAppPath: 'path/to/App_universal.app',
 });
 ```
+
+For full API usage, see the [API documentation](https://packages.electronjs.org/universal).
 
 ## Advanced configuration
 
@@ -117,9 +120,5 @@ app will work as well.
 Note that if you are using `mergeASARs`, you may need to add architecture-specific
 binary resources to the `singleArchFiles` pattern.
 See [Merging ASARs usage](#merging-asar-archives-to-reduce-app-size) for an example.
-
-#### How do I build my app for Apple silicon in the first place?
-
-Check out the [Electron Apple silicon blog post](https://www.electronjs.org/blog/apple-silicon).
 
 [`minimatch`]: https://github.com/isaacs/minimatch?tab=readme-ov-file#features
