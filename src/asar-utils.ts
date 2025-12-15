@@ -1,11 +1,13 @@
-import asar from '@electron/asar';
-import { execFileSync } from 'child_process';
-import crypto from 'crypto';
-import fs from 'fs-extra';
-import path from 'path';
+import { execFileSync } from 'node:child_process';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+import * as asar from '@electron/asar';
 import { minimatch } from 'minimatch';
-import os from 'os';
-import { d } from './debug';
+
+import { d } from './debug.js';
 
 const LIPO = 'lipo';
 
@@ -40,7 +42,7 @@ export const detectAsarMode = async (appPath: string) => {
   d('checking asar mode of', appPath);
   const asarPath = path.resolve(appPath, 'Contents', 'Resources', 'app.asar');
 
-  if (!(await fs.pathExists(asarPath))) {
+  if (!fs.existsSync(asarPath)) {
     d('determined no asar');
     return AsarMode.NO_ASAR;
   }
@@ -84,8 +86,10 @@ export const mergeASARs = async ({
 }: MergeASARsOptions): Promise<void> => {
   d(`merging ${x64AsarPath} and ${arm64AsarPath}`);
 
-  const x64Files = new Set(asar.listPackage(x64AsarPath).map(toRelativePath));
-  const arm64Files = new Set(asar.listPackage(arm64AsarPath).map(toRelativePath));
+  const x64Files = new Set(asar.listPackage(x64AsarPath, { isPack: false }).map(toRelativePath));
+  const arm64Files = new Set(
+    asar.listPackage(arm64AsarPath, { isPack: false }).map(toRelativePath),
+  );
 
   //
   // Build set of unpacked directories and files
@@ -146,14 +150,13 @@ export const mergeASARs = async ({
     const x64Content = asar.extractFile(x64AsarPath, file);
     const arm64Content = asar.extractFile(arm64AsarPath, file);
 
+    // Skip file if the same content
     if (x64Content.compare(arm64Content) === 0) {
       continue;
     }
 
-    if (
-      MACHO_UNIVERSAL_MAGIC.has(x64Content.readUInt32LE(0)) &&
-      MACHO_UNIVERSAL_MAGIC.has(arm64Content.readUInt32LE(0))
-    ) {
+    // Skip universal Mach-O files.
+    if (isUniversalMachO(x64Content)) {
       continue;
     }
 
@@ -168,8 +171,8 @@ export const mergeASARs = async ({
   // Extract both
   //
 
-  const x64Dir = await fs.mkdtemp(path.join(os.tmpdir(), 'x64-'));
-  const arm64Dir = await fs.mkdtemp(path.join(os.tmpdir(), 'arm64-'));
+  const x64Dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'x64-'));
+  const arm64Dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'arm64-'));
 
   try {
     d(`extracting ${x64AsarPath} to ${x64Dir}`);
@@ -184,18 +187,22 @@ export const mergeASARs = async ({
 
       if (isDirectory(arm64AsarPath, file)) {
         d(`creating unique directory: ${file}`);
-        await fs.mkdirp(destination);
+        await fs.promises.mkdir(destination, { recursive: true });
         continue;
       }
 
-      d(`xopying unique file: ${file}`);
-      await fs.mkdirp(path.dirname(destination));
-      await fs.copy(source, destination);
+      d(`copying unique file: ${file}`);
+      await fs.promises.mkdir(path.dirname(destination), { recursive: true });
+      await fs.promises.cp(source, destination, {
+        force: true,
+        recursive: true,
+        verbatimSymlinks: true,
+      });
     }
 
     for (const binding of commonBindings) {
-      const source = await fs.realpath(path.resolve(arm64Dir, binding));
-      const destination = await fs.realpath(path.resolve(x64Dir, binding));
+      const source = await fs.promises.realpath(path.resolve(arm64Dir, binding));
+      const destination = await fs.promises.realpath(path.resolve(x64Dir, binding));
 
       d(`merging binding: ${binding}`);
       execFileSync(LIPO, [source, destination, '-create', '-output', destination]);
@@ -218,6 +225,13 @@ export const mergeASARs = async ({
 
     d('done merging');
   } finally {
-    await Promise.all([fs.remove(x64Dir), fs.remove(arm64Dir)]);
+    await Promise.all([
+      fs.promises.rm(x64Dir, { recursive: true, force: true }),
+      fs.promises.rm(arm64Dir, { recursive: true, force: true }),
+    ]);
   }
+};
+
+export const isUniversalMachO = (fileContent: Buffer) => {
+  return MACHO_UNIVERSAL_MAGIC.has(fileContent.readUInt32LE(0));
 };

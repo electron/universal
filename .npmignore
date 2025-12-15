@@ -1,0 +1,5 @@
+# npmignore overrides .gitignore for yarn pack
+# Only exclude source files, not built files
+entry-asar/**/*.mts
+entry-asar/**/*.ts  
+entry-asar/**/tsconfig.json
