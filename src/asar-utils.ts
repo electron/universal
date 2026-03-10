@@ -210,14 +210,45 @@ export const mergeASARs = async ({
 
     d(`creating archive at ${outputAsarPath}`);
 
-    const resolvedUnpack = Array.from(unpackedFiles).map((file) => path.join(x64Dir, file));
+    // Build a compact unpack pattern from directory prefixes instead of
+    // listing every file individually.  When there are many unpacked files
+    // (e.g. auto-unpacked native modules) the old brace-expansion approach
+    // can exceed minimatch's 64 KiB pattern-length limit.
+    // See: https://github.com/electron/universal/issues/XXX
+    const unpackDirs = new Set<string>();
+    for (const file of unpackedFiles) {
+      const parts = file.replace(/^\//, '').split('/');
+      let dir: string;
+      if (parts[0] === 'node_modules' && parts.length > 1) {
+        // Handle scoped packages (e.g. @img/sharp-darwin-arm64)
+        dir =
+          parts[1].startsWith('@') && parts.length > 2
+            ? parts.slice(0, 3).join('/')
+            : parts.slice(0, 2).join('/');
+      } else if (parts.length > 1) {
+        dir = parts.slice(0, 2).join('/');
+      } else {
+        dir = parts[0];
+      }
+      unpackDirs.add(dir);
+    }
+
+    const dirPatterns = Array.from(unpackDirs).map((dir) =>
+      path.join(x64Dir, dir, '**'),
+    );
 
     let unpack: string | undefined;
-    if (resolvedUnpack.length > 1) {
-      unpack = `{${resolvedUnpack.join(',')}}`;
-    } else if (resolvedUnpack.length === 1) {
-      unpack = resolvedUnpack[0];
+    if (dirPatterns.length > 1) {
+      unpack = `{${dirPatterns.join(',')}}`;
+    } else if (dirPatterns.length === 1) {
+      unpack = dirPatterns[0];
     }
+
+    d(
+      `unpack pattern (${unpackedFiles.size} files, ${unpackDirs.size} dirs): ${
+        unpack ? unpack.substring(0, 200) + '...' : 'none'
+      }`,
+    );
 
     await asar.createPackageWithOptions(x64Dir, outputAsarPath, {
       unpack,
