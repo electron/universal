@@ -214,7 +214,7 @@ export const mergeASARs = async ({
     // listing every file individually.  When there are many unpacked files
     // (e.g. auto-unpacked native modules) the old brace-expansion approach
     // can exceed minimatch's 64 KiB pattern-length limit.
-    // See: https://github.com/electron/universal/issues/XXX
+    // See: https://github.com/electron/universal/pull/178
     const unpackDirs = new Set<string>();
     for (const file of unpackedFiles) {
       const parts = file.replace(/^\//, '').split('/');
