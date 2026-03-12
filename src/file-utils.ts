@@ -2,10 +2,38 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { promises as stream } from 'node:stream';
 
-import { spawn, ExitCodeError } from '@malept/cross-spawn-promise';
 import { minimatch } from 'minimatch';
 
-const MACHO_PREFIX = 'Mach-O ';
+// See: https://github.com/apple-opensource-mirror/llvmCore/blob/0c60489d96c87140db9a6a14c6e82b15f5e5d252/include/llvm/Object/MachOFormat.h#L108-L112
+export const MACHO_MAGIC = new Set([
+  // 32-bit Mach-O
+  0xfeedface, 0xcefaedfe,
+
+  // 64-bit Mach-O
+  0xfeedfacf, 0xcffaedfe,
+]);
+
+export const MACHO_UNIVERSAL_MAGIC = new Set([
+  // universal
+  0xcafebabe, 0xbebafeca,
+]);
+
+// Java .class files share the 0xCAFEBABE magic with Mach-O fat binaries. For
+// Mach-O, bytes 4-7 encode nfat_arch (a small integer); for Java they encode
+// (minor_version << 16 | major_version) where major_version >= 45. Any value
+// below 30 is safely Mach-O.
+const FAT_ARCH_DISAMBIGUATION_THRESHOLD = 30;
+
+export const isMachO = (header: Buffer): boolean => {
+  if (header.length < 4) return false;
+  const magic = header.readUInt32LE(0);
+  if (MACHO_MAGIC.has(magic)) return true;
+  if (MACHO_UNIVERSAL_MAGIC.has(magic)) {
+    if (header.length < 8) return true;
+    return header.readUInt32BE(4) < FAT_ARCH_DISAMBIGUATION_THRESHOLD;
+  }
+  return false;
+};
 
 const UNPACKED_ASAR_PATH = path.join('Contents', 'Resources', 'app.asar.unpacked');
 
@@ -52,7 +80,7 @@ export const getAllAppFiles = async (
   appPath: string,
   opts: GetAllAppFilesOpts,
 ): Promise<AppFile[]> => {
-  const unpackedPath = path.join('Contents', 'Resources', 'app.asar.unpacked');
+  appPath = await fs.promises.realpath(appPath);
 
   const files: AppFile[] = [];
 
@@ -69,21 +97,11 @@ export const getAllAppFiles = async (
 
       let fileType = AppFileType.PLAIN;
 
-      var fileOutput = '';
-      try {
-        fileOutput = await spawn('file', ['--brief', '--no-pad', p]);
-      } catch (e) {
-        if (e instanceof ExitCodeError) {
-          /* silently accept error codes from "file" */
-        } else {
-          throw e;
-        }
-      }
       if (p.endsWith('.asar')) {
         fileType = AppFileType.APP_CODE;
       } else if (isSingleArchFile(relativePath, opts)) {
         fileType = AppFileType.SINGLE_ARCH;
-      } else if (fileOutput.startsWith(MACHO_PREFIX)) {
+      } else if (isMachO(await readMachOHeader(p))) {
         fileType = AppFileType.MACHO;
       } else if (p.endsWith('.bin')) {
         fileType = AppFileType.SNAPSHOT;
@@ -110,8 +128,9 @@ export const getAllAppFiles = async (
 
 export const readMachOHeader = async (path: string) => {
   const chunks: Buffer[] = [];
-  // no need to read the entire file, we only need the first 4 bytes of the file to determine the header
-  await stream.pipeline(fs.createReadStream(path, { start: 0, end: 3 }), async function* (source) {
+  // no need to read the entire file, we only need the first 8 bytes to
+  // identify the Mach-O magic (and disambiguate fat binaries from Java .class)
+  await stream.pipeline(fs.createReadStream(path, { start: 0, end: 7 }), async function* (source) {
     for await (const chunk of source) {
       chunks.push(chunk);
     }

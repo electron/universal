@@ -8,6 +8,7 @@ import * as asar from '@electron/asar';
 import { minimatch } from 'minimatch';
 
 import { d } from './debug.js';
+import { MACHO_MAGIC, MACHO_UNIVERSAL_MAGIC } from './file-utils.js';
 
 const LIPO = 'lipo';
 
@@ -23,20 +24,6 @@ export type MergeASARsOptions = {
 
   singleArchFiles?: string;
 };
-
-// See: https://github.com/apple-opensource-mirror/llvmCore/blob/0c60489d96c87140db9a6a14c6e82b15f5e5d252/include/llvm/Object/MachOFormat.h#L108-L112
-const MACHO_MAGIC = new Set([
-  // 32-bit Mach-O
-  0xfeedface, 0xcefaedfe,
-
-  // 64-bit Mach-O
-  0xfeedfacf, 0xcffaedfe,
-]);
-
-const MACHO_UNIVERSAL_MAGIC = new Set([
-  // universal
-  0xcafebabe, 0xbebafeca,
-]);
 
 export const detectAsarMode = async (appPath: string) => {
   d('checking asar mode of', appPath);

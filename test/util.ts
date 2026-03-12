@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { createPackageWithOptions, getRawHeader } from '@electron/asar';
@@ -6,6 +7,7 @@ import { downloadArtifact } from '@electron/get';
 import { spawn } from '@malept/cross-spawn-promise';
 import * as zip from 'cross-zip';
 import plist from 'plist';
+import type { ExpectStatic } from 'vitest';
 
 import * as fileUtils from '../dist/file-utils.js';
 
@@ -17,12 +19,13 @@ export const VERIFY_APP_TIMEOUT = 80 * 1000;
 export const fixtureDir = path.resolve(import.meta.dirname, 'fixtures');
 export const asarsDir = path.resolve(fixtureDir, 'asars');
 export const appsDir = path.resolve(fixtureDir, 'apps');
-export const appsOutPath = path.resolve(appsDir, 'out');
 
-export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho = false) => {
-  const { expect } = await import('vitest');
-
-  await ensureUniversal(appPath);
+export const verifyApp = async (
+  expect: ExpectStatic,
+  appPath: string,
+  containsRuntimeGeneratedMacho = false,
+) => {
+  await ensureUniversal(expect, appPath);
 
   const resourcesDir = path.resolve(appPath, 'Contents', 'Resources');
   const resourcesDirContents = await fs.promises.readdir(resourcesDir);
@@ -55,7 +58,7 @@ export const verifyApp = async (appPath: string, containsRuntimeGeneratedMacho =
     .filter((p) => dirsToSnapshot.includes(path.basename(p)))
     .sort();
   for await (const dir of appDirs) {
-    await verifyFileTree(path.resolve(resourcesDir, dir));
+    await verifyFileTree(expect, path.resolve(resourcesDir, dir));
   }
 
   const allFiles = await fileUtils.getAllAppFiles(appPath, {});
@@ -91,9 +94,7 @@ const extractAsarIntegrity = async (infoPlist: string) => {
   return integrity;
 };
 
-export const verifyFileTree = async (dirPath: string) => {
-  const { expect } = await import('vitest');
-
+export const verifyFileTree = async (expect: ExpectStatic, dirPath: string) => {
   const dirFiles = await fileUtils.getAllAppFiles(dirPath, {});
   const files = dirFiles.map((file) => {
     const it = path.join(dirPath, file.relativePath);
@@ -106,9 +107,7 @@ export const verifyFileTree = async (dirPath: string) => {
   expect(files).toMatchSnapshot();
 };
 
-export const ensureUniversal = async (app: string) => {
-  const { expect } = await import('vitest');
-
+export const ensureUniversal = async (expect: ExpectStatic, app: string) => {
   const exe = path.resolve(app, 'Contents', 'MacOS', 'Electron');
   const result = await spawn(exe);
   expect(result).toContain('arm64');
@@ -171,10 +170,7 @@ export const createStagingAppDir = async (
   testName: string | undefined,
   additionalFiles: Record<string, string> = {},
 ) => {
-  const outDir = (testName || 'app') + Math.floor(Math.random() * 100); // tests run in parallel, randomize dir suffix to prevent naming collisions
-  const testPath = path.join(appsDir, outDir);
-  await fs.promises.rm(testPath, { recursive: true, force: true });
-
+  const testPath = await fs.promises.mkdtemp(path.join(os.tmpdir(), `${testName || 'app'}-`));
   await fs.promises.cp(path.join(asarsDir, 'app'), testPath, {
     recursive: true,
     verbatimSymlinks: true,
@@ -216,9 +212,13 @@ export const templateApp = async (
     platform: 'darwin',
     arch,
   });
+  // unzip to a unique tmpdir so concurrent calls don't race on the intermediate
+  // Electron.app path
+  const extractDir = await fs.promises.mkdtemp(path.join(appsDir, '.extract-'));
   const appPath = path.resolve(appsDir, name);
-  zip.unzipSync(electronZip, appsDir);
-  await fs.promises.rename(path.resolve(appsDir, 'Electron.app'), appPath);
+  zip.unzipSync(electronZip, extractDir);
+  await fs.promises.rename(path.resolve(extractDir, 'Electron.app'), appPath);
+  await fs.promises.rm(extractDir, { recursive: true, force: true });
   await fs.promises.rm(path.resolve(appPath, 'Contents', 'Resources', 'default_app.asar'), {
     recursive: true,
     force: true,

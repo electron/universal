@@ -30,53 +30,55 @@ export default async () => {
   // generate mach-o binaries to be leveraged in lipo tests
   generateMachO();
 
-  await templateApp('Arm64Asar.app', 'arm64', async (appPath) => {
-    await fs.promises.cp(
-      path.resolve(asarsDir, 'app.asar'),
-      path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
-      { recursive: true, verbatimSymlinks: true },
-    );
-  });
+  await Promise.all([
+    templateApp('Arm64Asar.app', 'arm64', async (appPath) => {
+      await fs.promises.cp(
+        path.resolve(asarsDir, 'app.asar'),
+        path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+        { recursive: true, verbatimSymlinks: true },
+      );
+    }),
 
-  // contains `extra-file.txt`
-  await templateApp('Arm64AsarExtraFile.app', 'arm64', async (appPath) => {
-    await fs.promises.cp(
-      path.resolve(asarsDir, 'app2.asar'),
-      path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
-      { recursive: true, verbatimSymlinks: true },
-    );
-  });
+    // contains `extra-file.txt`
+    templateApp('Arm64AsarExtraFile.app', 'arm64', async (appPath) => {
+      await fs.promises.cp(
+        path.resolve(asarsDir, 'app2.asar'),
+        path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+        { recursive: true, verbatimSymlinks: true },
+      );
+    }),
 
-  await templateApp('X64Asar.app', 'x64', async (appPath) => {
-    await fs.promises.cp(
-      path.resolve(asarsDir, 'app.asar'),
-      path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
-      { recursive: true, verbatimSymlinks: true },
-    );
-  });
+    templateApp('X64Asar.app', 'x64', async (appPath) => {
+      await fs.promises.cp(
+        path.resolve(asarsDir, 'app.asar'),
+        path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+        { recursive: true, verbatimSymlinks: true },
+      );
+    }),
 
-  await templateApp('Arm64NoAsar.app', 'arm64', async (appPath) => {
-    await fs.promises.cp(
-      path.resolve(asarsDir, 'app'),
-      path.resolve(appPath, 'Contents', 'Resources', 'app'),
-      { recursive: true, verbatimSymlinks: true },
-    );
-  });
+    templateApp('Arm64NoAsar.app', 'arm64', async (appPath) => {
+      await fs.promises.cp(
+        path.resolve(asarsDir, 'app'),
+        path.resolve(appPath, 'Contents', 'Resources', 'app'),
+        { recursive: true, verbatimSymlinks: true },
+      );
+    }),
 
-  // contains `extra-file.txt`
-  await templateApp('Arm64NoAsarExtraFile.app', 'arm64', async (appPath) => {
-    await fs.promises.cp(
-      path.resolve(asarsDir, 'app2'),
-      path.resolve(appPath, 'Contents', 'Resources', 'app'),
-      { recursive: true, verbatimSymlinks: true },
-    );
-  });
+    // contains `extra-file.txt`
+    templateApp('Arm64NoAsarExtraFile.app', 'arm64', async (appPath) => {
+      await fs.promises.cp(
+        path.resolve(asarsDir, 'app2'),
+        path.resolve(appPath, 'Contents', 'Resources', 'app'),
+        { recursive: true, verbatimSymlinks: true },
+      );
+    }),
 
-  await templateApp('X64NoAsar.app', 'x64', async (appPath) => {
-    await fs.promises.cp(
-      path.resolve(asarsDir, 'app'),
-      path.resolve(appPath, 'Contents', 'Resources', 'app'),
-      { recursive: true, verbatimSymlinks: true },
-    );
-  });
+    templateApp('X64NoAsar.app', 'x64', async (appPath) => {
+      await fs.promises.cp(
+        path.resolve(asarsDir, 'app'),
+        path.resolve(appPath, 'Contents', 'Resources', 'app'),
+        { recursive: true, verbatimSymlinks: true },
+      );
+    }),
+  ]);
 };
