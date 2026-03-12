@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { appsDir, asarsDir, fixtureDir, templateApp } from './util.js';
+import { appsDir, asarsDir, downloadElectronZip, fixtureDir, templateApp } from './util.js';
 
 // generates binaries from hello-world.c
 // hello-world-universal, hello-world-x86_64, hello-world-arm64
@@ -29,6 +29,12 @@ export default async () => {
 
   // generate mach-o binaries to be leveraged in lipo tests
   generateMachO();
+
+  // @electron/get is not safe for concurrent downloads of the same artifact —
+  // warm the cache serially before the parallel templateApp calls (here and in
+  // the concurrent test suite) so they all hit the cached zip.
+  await downloadElectronZip('arm64');
+  await downloadElectronZip('x64');
 
   await Promise.all([
     templateApp('Arm64Asar.app', 'arm64', async (appPath) => {

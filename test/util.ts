@@ -201,17 +201,20 @@ export const createStagingAppDir = async (
   };
 };
 
-export const templateApp = async (
-  name: string,
-  arch: string,
-  modify: (appPath: string) => Promise<void>,
-) => {
-  const electronZip = await downloadArtifact({
+export const downloadElectronZip = (arch: string) =>
+  downloadArtifact({
     artifactName: 'electron',
     version: '27.0.0',
     platform: 'darwin',
     arch,
   });
+
+export const templateApp = async (
+  name: string,
+  arch: string,
+  modify: (appPath: string) => Promise<void>,
+) => {
+  const electronZip = await downloadElectronZip(arch);
   // unzip to a unique tmpdir so concurrent calls don't race on the intermediate
   // Electron.app path
   const extractDir = await fs.promises.mkdtemp(path.join(appsDir, '.extract-'));
