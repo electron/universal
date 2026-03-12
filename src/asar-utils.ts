@@ -233,9 +233,7 @@ export const mergeASARs = async ({
       unpackDirs.add(dir);
     }
 
-    const dirPatterns = Array.from(unpackDirs).map((dir) =>
-      path.join(x64Dir, dir, '**'),
-    );
+    const dirPatterns = Array.from(unpackDirs).map((dir) => path.join(x64Dir, dir, '**'));
 
     let unpack: string | undefined;
     if (dirPatterns.length > 1) {
