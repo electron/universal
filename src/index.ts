@@ -120,14 +120,15 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
   d('building universal app in', tmpDir);
 
   try {
-    d('copying x64 app as starter template');
     const tmpApp = path.resolve(tmpDir, 'Tmp.app');
     try {
       // On APFS (standard on modern macOS), -c does a copy-on-write clone
       // that's near-instant even for multi-hundred-MB apps.
+      d('copying x64 app as starter template via APFS clone (cp -cR)');
       await spawn('cp', ['-cR', opts.x64AppPath, tmpApp]);
     } catch {
       // -c fails on non-APFS volumes; fall back to a regular copy.
+      d('APFS clone unsupported, falling back to regular cp -R');
       await spawn('cp', ['-R', opts.x64AppPath, tmpApp]);
     }
 
