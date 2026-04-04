@@ -126,4 +126,22 @@ describe('compareDirectories', () => {
     const linkEntry = results.find((r) => r.name1 === 'link.txt');
     expect(linkEntry?.state).toBe('equal');
   });
+
+  it('should traverse symlinked directories', async () => {
+    await setup();
+    // dir1: realdir/file.txt + linkdir -> realdir
+    await fs.promises.mkdir(path.join(dir1, 'realdir'));
+    await fs.promises.writeFile(path.join(dir1, 'realdir', 'file.txt'), 'data');
+    await fs.promises.symlink(path.join(dir1, 'realdir'), path.join(dir1, 'linkdir'));
+    // dir2: same structure
+    await fs.promises.mkdir(path.join(dir2, 'realdir'));
+    await fs.promises.writeFile(path.join(dir2, 'realdir', 'file.txt'), 'data');
+    await fs.promises.symlink(path.join(dir2, 'realdir'), path.join(dir2, 'linkdir'));
+
+    const results = await compareDirectories(dir1, dir2);
+    const linkdirEntry = results.find((r) => r.relativePath === 'linkdir');
+    expect(linkdirEntry).toBeDefined();
+    expect(linkdirEntry!.state).toBe('equal');
+    expect(linkdirEntry!.name1).toBe('file.txt');
+  });
 });

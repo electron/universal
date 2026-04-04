@@ -51,13 +51,18 @@ export async function compareDirectories(dir1: string, dir2: string): Promise<Di
   async function getFiles(dir: string, rel = ''): Promise<Map<string, string>> {
     const entries = new Map<string, string>();
     for (const item of await fs.promises.readdir(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, item.name);
       const relPath = rel ? path.join(rel, item.name) : item.name;
-      if (item.isDirectory()) {
-        for (const [k, v] of await getFiles(path.join(dir, item.name), relPath)) {
+      // For symlinks, stat the target to determine if it's a file or directory
+      const isDir =
+        item.isDirectory() ||
+        (item.isSymbolicLink() && (await fs.promises.stat(fullPath)).isDirectory());
+      if (isDir) {
+        for (const [k, v] of await getFiles(fullPath, relPath)) {
           entries.set(k, v);
         }
       } else if (item.isFile() || item.isSymbolicLink()) {
-        entries.set(relPath, path.join(dir, item.name));
+        entries.set(relPath, fullPath);
       }
     }
     return entries;
