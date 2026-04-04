@@ -1,10 +1,11 @@
-import { execFile as execFileCb, execFileSync } from 'node:child_process';
+import { execFile as execFileCb } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
 import * as asar from '@electron/asar';
+import plist from 'plist';
 
 import { AsarMode, detectAsarMode, isUniversalMachO, mergeASARs } from './asar-utils.js';
 import { AppFile, AppFileType, fsMove, getAllAppFiles, readMachOHeader } from './file-utils.js';
@@ -13,22 +14,6 @@ import { d } from './debug.js';
 import { computeIntegrityData } from './integrity.js';
 
 const execFile = promisify(execFileCb);
-
-function parsePlist(filePath: string): Record<string, unknown> {
-  return JSON.parse(
-    execFileSync('plutil', ['-convert', 'json', '-o', '-', filePath], { encoding: 'utf8' }),
-  );
-}
-
-function buildPlist(obj: Record<string, unknown>): string {
-  const tmpFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'plist-')), 'data.json');
-  try {
-    fs.writeFileSync(tmpFile, JSON.stringify(obj));
-    return execFileSync('plutil', ['-convert', 'xml1', '-o', '-', tmpFile], { encoding: 'utf8' });
-  } finally {
-    fs.rmSync(path.dirname(tmpFile), { recursive: true, force: true });
-  }
-}
 
 type DiffEntry = {
   state: 'equal' | 'distinct' | 'left' | 'right';
@@ -449,9 +434,11 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       const x64PlistPath = path.resolve(opts.x64AppPath, plistFile.relativePath);
       const arm64PlistPath = path.resolve(opts.arm64AppPath, plistFile.relativePath);
 
-      const { ElectronAsarIntegrity: x64Integrity, ...x64Plist } = parsePlist(x64PlistPath) as any;
-      const { ElectronAsarIntegrity: arm64Integrity, ...arm64Plist } = parsePlist(
-        arm64PlistPath,
+      const { ElectronAsarIntegrity: x64Integrity, ...x64Plist } = plist.parse(
+        await fs.promises.readFile(x64PlistPath, 'utf8'),
+      ) as any;
+      const { ElectronAsarIntegrity: arm64Integrity, ...arm64Plist } = plist.parse(
+        await fs.promises.readFile(arm64PlistPath, 'utf8'),
       ) as any;
       if (JSON.stringify(x64Plist) !== JSON.stringify(arm64Plist)) {
         throw new Error(
@@ -473,7 +460,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
 
       await fs.promises.writeFile(
         path.resolve(tmpApp, plistFile.relativePath),
-        buildPlist(mergedPlist),
+        plist.build(mergedPlist),
       );
     }
 

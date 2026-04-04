@@ -1,4 +1,4 @@
-import { execFile as execFileCb, execFileSync } from 'node:child_process';
+import { execFile as execFileCb } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 import { createPackageWithOptions, getRawHeader } from '@electron/asar';
 import { downloadArtifact } from '@electron/get';
 import * as zip from 'cross-zip';
+import plist from 'plist';
 import type { ExpectStatic } from 'vitest';
 
 const execFile = promisify(execFileCb);
@@ -89,11 +90,10 @@ export const verifyApp = async (
   expect(integrityMap).toMatchSnapshot();
 };
 
-const extractAsarIntegrity = (infoPlist: string) => {
-  const parsed = JSON.parse(
-    execFileSync('plutil', ['-convert', 'json', '-o', '-', infoPlist], { encoding: 'utf8' }),
-  );
-  const { ElectronAsarIntegrity: integrity, ...otherData } = parsed;
+const extractAsarIntegrity = async (infoPlist: string) => {
+  const { ElectronAsarIntegrity: integrity, ...otherData } = plist.parse(
+    await fs.promises.readFile(infoPlist, 'utf-8'),
+  ) as any;
   return integrity;
 };
 

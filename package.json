@@ -40,7 +40,9 @@
     "@electron/get": "^4.0.0",
     "@tsconfig/node22": "^22.0.1",
     "@types/cross-zip": "^4.0.1",
+    "@types/debug": "^4.1.10",
     "@types/node": "~22.10.7",
+    "@types/plist": "^3.0.4",
     "cross-zip": "^4.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.0",
@@ -50,7 +52,9 @@
     "vitest": "^4.1.2"
   },
   "dependencies": {
-    "@electron/asar": "^4.0.0"
+    "@electron/asar": "^4.0.0",
+    "debug": "^4.3.1",
+    "plist": "^3.1.0"
   },
   "lint-staged": {
     "*.ts": [

@@ -1,3 +1,3 @@
-import { debuglog } from 'node:util';
+import debug from 'debug';
 
-export const d = debuglog('electron-universal');
+export const d = debug('electron-universal');
