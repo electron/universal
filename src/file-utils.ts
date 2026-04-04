@@ -2,8 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { promises as stream } from 'node:stream';
 
-import { minimatch } from 'minimatch';
-
 // See: https://github.com/apple-opensource-mirror/llvmCore/blob/0c60489d96c87140db9a6a14c6e82b15f5e5d252/include/llvm/Object/MachOFormat.h#L108-L112
 export const MACHO_MAGIC = new Set([
   // 32-bit Mach-O
@@ -67,9 +65,10 @@ const isSingleArchFile = (relativePath: string, opts: GetAllAppFilesOpts): boole
     return false;
   }
 
-  return minimatch(unpackedPath, opts.singleArchFiles, {
-    matchBase: true,
-  });
+  return path.matchesGlob(
+    opts.singleArchFiles.includes('/') ? unpackedPath : path.basename(unpackedPath),
+    opts.singleArchFiles,
+  );
 };
 
 /**

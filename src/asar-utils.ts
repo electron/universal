@@ -5,8 +5,6 @@ import os from 'node:os';
 import path from 'node:path';
 
 import * as asar from '@electron/asar';
-import { minimatch } from 'minimatch';
-
 import { d } from './debug.js';
 import { MACHO_MAGIC, MACHO_UNIVERSAL_MAGIC } from './file-utils.js';
 
@@ -57,7 +55,10 @@ function isDirectory(a: string, file: string): boolean {
 }
 
 function checkSingleArch(archive: string, file: string, allowList?: string): void {
-  if (allowList === undefined || !minimatch(file, allowList, { matchBase: true })) {
+  if (
+    allowList === undefined ||
+    !path.matchesGlob(allowList.includes('/') ? file : path.basename(file), allowList)
+  ) {
     throw new Error(
       `Detected unique file "${file}" in "${archive}" not covered by ` +
         `allowList rule: "${allowList}"`,

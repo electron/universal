@@ -1,18 +1,86 @@
+import { execFile as execFileCb, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { promisify } from 'node:util';
 
 import * as asar from '@electron/asar';
-import { spawn } from '@malept/cross-spawn-promise';
-import * as dircompare from 'dir-compare';
-import { minimatch } from 'minimatch';
-import plist from 'plist';
 
 import { AsarMode, detectAsarMode, isUniversalMachO, mergeASARs } from './asar-utils.js';
 import { AppFile, AppFileType, fsMove, getAllAppFiles, readMachOHeader } from './file-utils.js';
 import { sha } from './sha.js';
 import { d } from './debug.js';
 import { computeIntegrityData } from './integrity.js';
+
+const execFile = promisify(execFileCb);
+
+function parsePlist(filePath: string): Record<string, unknown> {
+  return JSON.parse(
+    execFileSync('plutil', ['-convert', 'json', '-o', '-', filePath], { encoding: 'utf8' }),
+  );
+}
+
+function buildPlist(obj: Record<string, unknown>): string {
+  const tmpFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'plist-')), 'data.json');
+  try {
+    fs.writeFileSync(tmpFile, JSON.stringify(obj));
+    return execFileSync('plutil', ['-convert', 'xml1', '-o', '-', tmpFile], { encoding: 'utf8' });
+  } finally {
+    fs.rmSync(path.dirname(tmpFile), { recursive: true, force: true });
+  }
+}
+
+type DiffEntry = {
+  state: 'equal' | 'distinct' | 'left' | 'right';
+  name1?: string;
+  relativePath: string;
+};
+
+async function compareDirectories(dir1: string, dir2: string): Promise<DiffEntry[]> {
+  async function getFiles(dir: string, rel = ''): Promise<Map<string, string>> {
+    const entries = new Map<string, string>();
+    for (const item of await fs.promises.readdir(dir, { withFileTypes: true })) {
+      const relPath = rel ? path.join(rel, item.name) : item.name;
+      if (item.isDirectory()) {
+        for (const [k, v] of await getFiles(path.join(dir, item.name), relPath)) {
+          entries.set(k, v);
+        }
+      } else if (item.isFile() || item.isSymbolicLink()) {
+        entries.set(relPath, path.join(dir, item.name));
+      }
+    }
+    return entries;
+  }
+
+  const files1 = await getFiles(dir1);
+  const files2 = await getFiles(dir2);
+  const results: DiffEntry[] = [];
+
+  for (const relFile of new Set([...files1.keys(), ...files2.keys()])) {
+    const name = path.basename(relFile);
+    const relDir = path.dirname(relFile);
+    const relativePath = relDir === '.' ? '' : relDir;
+
+    if (!files1.has(relFile)) {
+      results.push({ state: 'right', relativePath });
+      continue;
+    }
+    if (!files2.has(relFile)) {
+      results.push({ state: 'left', name1: name, relativePath });
+      continue;
+    }
+
+    const content1 = await fs.promises.readFile(files1.get(relFile)!);
+    const content2 = await fs.promises.readFile(files2.get(relFile)!);
+    results.push({
+      state: content1.equals(content2) ? 'equal' : 'distinct',
+      name1: name,
+      relativePath,
+    });
+  }
+
+  return results;
+}
 
 /**
  * Options to pass into the {@link makeUniversalApp} function.
@@ -125,11 +193,11 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       // On APFS (standard on modern macOS), -c does a copy-on-write clone
       // that's near-instant even for multi-hundred-MB apps.
       d('copying x64 app as starter template via APFS clone (cp -cR)');
-      await spawn('cp', ['-cR', opts.x64AppPath, tmpApp]);
+      await execFile('cp', ['-cR', opts.x64AppPath, tmpApp]);
     } catch {
       // -c fails on non-APFS volumes; fall back to a regular copy.
       d('APFS clone unsupported, falling back to regular cp -R');
-      await spawn('cp', ['-R', opts.x64AppPath, tmpApp]);
+      await execFile('cp', ['-R', opts.x64AppPath, tmpApp]);
     }
 
     const uniqueToX64: string[] = [];
@@ -194,7 +262,12 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       if (x64Sha === arm64Sha) {
         if (
           opts.x64ArchFiles === undefined ||
-          !minimatch(machOFile.relativePath, opts.x64ArchFiles, { matchBase: true })
+          !path.matchesGlob(
+            opts.x64ArchFiles.includes('/')
+              ? machOFile.relativePath
+              : path.basename(machOFile.relativePath),
+            opts.x64ArchFiles,
+          )
         ) {
           throw new Error(
             `Detected file "${machOFile.relativePath}" that's the same in both x64 and arm64 builds and not covered by the ` +
@@ -214,7 +287,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         first,
         second,
       });
-      await spawn('lipo', [
+      await execFile('lipo', [
         first,
         second,
         '-create',
@@ -232,12 +305,11 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
      */
     if (x64AsarMode === AsarMode.NO_ASAR) {
       d('checking if the x64 and arm64 app folders are identical');
-      const comparison = await dircompare.compare(
+      const diffSet = await compareDirectories(
         path.resolve(tmpApp, 'Contents', 'Resources', 'app'),
         path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app'),
-        { compareSize: true, compareContent: true },
       );
-      const differences = comparison.diffSet!.filter((difference) => difference.state !== 'equal');
+      const differences = diffSet.filter((difference) => difference.state !== 'equal');
       d(`Found ${differences.length} difference(s) between the x64 and arm64 folders`);
       const nonMergedDifferences = differences.filter(
         (difference) =>
@@ -377,11 +449,9 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       const x64PlistPath = path.resolve(opts.x64AppPath, plistFile.relativePath);
       const arm64PlistPath = path.resolve(opts.arm64AppPath, plistFile.relativePath);
 
-      const { ElectronAsarIntegrity: x64Integrity, ...x64Plist } = plist.parse(
-        await fs.promises.readFile(x64PlistPath, 'utf8'),
-      ) as any;
-      const { ElectronAsarIntegrity: arm64Integrity, ...arm64Plist } = plist.parse(
-        await fs.promises.readFile(arm64PlistPath, 'utf8'),
+      const { ElectronAsarIntegrity: x64Integrity, ...x64Plist } = parsePlist(x64PlistPath) as any;
+      const { ElectronAsarIntegrity: arm64Integrity, ...arm64Plist } = parsePlist(
+        arm64PlistPath,
       ) as any;
       if (JSON.stringify(x64Plist) !== JSON.stringify(arm64Plist)) {
         throw new Error(
@@ -391,14 +461,19 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
 
       const injectAsarIntegrity =
         !opts.infoPlistsToIgnore ||
-        minimatch(plistFile.relativePath, opts.infoPlistsToIgnore, { matchBase: true });
+        path.matchesGlob(
+          opts.infoPlistsToIgnore.includes('/')
+            ? plistFile.relativePath
+            : path.basename(plistFile.relativePath),
+          opts.infoPlistsToIgnore,
+        );
       const mergedPlist = injectAsarIntegrity
         ? { ...x64Plist, ElectronAsarIntegrity: generatedIntegrity }
         : { ...x64Plist };
 
       await fs.promises.writeFile(
         path.resolve(tmpApp, plistFile.relativePath),
-        plist.build(mergedPlist),
+        buildPlist(mergedPlist),
       );
     }
 
@@ -412,7 +487,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
 
     d('moving final universal app to target destination');
     await fs.promises.mkdir(path.dirname(opts.outAppPath), { recursive: true });
-    await spawn('mv', [tmpApp, opts.outAppPath]);
+    await fsMove(tmpApp, opts.outAppPath);
   } catch (err) {
     throw err;
   } finally {
