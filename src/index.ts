@@ -8,64 +8,20 @@ import * as asar from '@electron/asar';
 import plist from 'plist';
 
 import { AsarMode, detectAsarMode, isUniversalMachO, mergeASARs } from './asar-utils.js';
-import { AppFile, AppFileType, fsMove, getAllAppFiles, readMachOHeader } from './file-utils.js';
+import {
+  AppFile,
+  AppFileType,
+  compareDirectories,
+  fsMove,
+  getAllAppFiles,
+  matchGlob,
+  readMachOHeader,
+} from './file-utils.js';
 import { sha } from './sha.js';
 import { d } from './debug.js';
 import { computeIntegrityData } from './integrity.js';
 
 const execFile = promisify(execFileCb);
-
-type DiffEntry = {
-  state: 'equal' | 'distinct' | 'left' | 'right';
-  name1?: string;
-  relativePath: string;
-};
-
-async function compareDirectories(dir1: string, dir2: string): Promise<DiffEntry[]> {
-  async function getFiles(dir: string, rel = ''): Promise<Map<string, string>> {
-    const entries = new Map<string, string>();
-    for (const item of await fs.promises.readdir(dir, { withFileTypes: true })) {
-      const relPath = rel ? path.join(rel, item.name) : item.name;
-      if (item.isDirectory()) {
-        for (const [k, v] of await getFiles(path.join(dir, item.name), relPath)) {
-          entries.set(k, v);
-        }
-      } else if (item.isFile() || item.isSymbolicLink()) {
-        entries.set(relPath, path.join(dir, item.name));
-      }
-    }
-    return entries;
-  }
-
-  const files1 = await getFiles(dir1);
-  const files2 = await getFiles(dir2);
-  const results: DiffEntry[] = [];
-
-  for (const relFile of new Set([...files1.keys(), ...files2.keys()])) {
-    const name = path.basename(relFile);
-    const relDir = path.dirname(relFile);
-    const relativePath = relDir === '.' ? '' : relDir;
-
-    if (!files1.has(relFile)) {
-      results.push({ state: 'right', relativePath });
-      continue;
-    }
-    if (!files2.has(relFile)) {
-      results.push({ state: 'left', name1: name, relativePath });
-      continue;
-    }
-
-    const content1 = await fs.promises.readFile(files1.get(relFile)!);
-    const content2 = await fs.promises.readFile(files2.get(relFile)!);
-    results.push({
-      state: content1.equals(content2) ? 'equal' : 'distinct',
-      name1: name,
-      relativePath,
-    });
-  }
-
-  return results;
-}
 
 /**
  * Options to pass into the {@link makeUniversalApp} function.
@@ -247,12 +203,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       if (x64Sha === arm64Sha) {
         if (
           opts.x64ArchFiles === undefined ||
-          !path.matchesGlob(
-            opts.x64ArchFiles.includes('/')
-              ? machOFile.relativePath
-              : path.basename(machOFile.relativePath),
-            opts.x64ArchFiles,
-          )
+          !matchGlob(machOFile.relativePath, opts.x64ArchFiles)
         ) {
           throw new Error(
             `Detected file "${machOFile.relativePath}" that's the same in both x64 and arm64 builds and not covered by the ` +
@@ -447,13 +398,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       }
 
       const injectAsarIntegrity =
-        !opts.infoPlistsToIgnore ||
-        path.matchesGlob(
-          opts.infoPlistsToIgnore.includes('/')
-            ? plistFile.relativePath
-            : path.basename(plistFile.relativePath),
-          opts.infoPlistsToIgnore,
-        );
+        !opts.infoPlistsToIgnore || matchGlob(plistFile.relativePath, opts.infoPlistsToIgnore);
       const mergedPlist = injectAsarIntegrity
         ? { ...x64Plist, ElectronAsarIntegrity: generatedIntegrity }
         : { ...x64Plist };
