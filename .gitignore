@@ -8,3 +8,4 @@ coverage
 docs
 .vscode
 .yarn/install-state.gz
+.DS_Store
