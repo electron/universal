@@ -2,22 +2,18 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2017",
-    "lib": [
-      "es2017"
-    ],
+    "lib": ["es2017"],
     "sourceMap": true,
     "strict": true,
+    "rootDir": "entry-asar",
     "outDir": "entry-asar",
-    "types": [
-      "node",
-    ],
+    "types": ["node"],
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "declaration": false
+    "declaration": false,
+    "ignoreDeprecations": "6.0"
   },
-  "include": [
-    "entry-asar"
-  ],
+  "include": ["entry-asar"],
   "exclude": []
 }
