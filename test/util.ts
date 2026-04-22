@@ -1,13 +1,16 @@
+import { execFile as execFileCb } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { promisify } from 'node:util';
 
 import { createPackageWithOptions, getRawHeader } from '@electron/asar';
 import { downloadArtifact } from '@electron/get';
-import { spawn } from '@malept/cross-spawn-promise';
 import * as zip from 'cross-zip';
 import plist from 'plist';
 import type { ExpectStatic } from 'vitest';
+
+const execFile = promisify(execFileCb);
 
 import * as fileUtils from '../dist/file-utils.js';
 
@@ -109,9 +112,9 @@ export const verifyFileTree = async (expect: ExpectStatic, dirPath: string) => {
 
 export const ensureUniversal = async (expect: ExpectStatic, app: string) => {
   const exe = path.resolve(app, 'Contents', 'MacOS', 'Electron');
-  const result = await spawn(exe);
+  const { stdout: result } = await execFile(exe);
   expect(result).toContain('arm64');
-  const result2 = await spawn('arch', ['-x86_64', exe]);
+  const { stdout: result2 } = await execFile('arch', ['-x86_64', exe]);
   expect(result2).toContain('x64');
 };
 

@@ -2,8 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { promises as stream } from 'node:stream';
 
-import { minimatch } from 'minimatch';
-
 // See: https://github.com/apple-opensource-mirror/llvmCore/blob/0c60489d96c87140db9a6a14c6e82b15f5e5d252/include/llvm/Object/MachOFormat.h#L108-L112
 export const MACHO_MAGIC = new Set([
   // 32-bit Mach-O
@@ -34,6 +32,71 @@ export const isMachO = (header: Buffer): boolean => {
   }
   return false;
 };
+
+/**
+ * Glob match with matchBase semantics: if the pattern contains no `/`,
+ * only the basename of `filePath` is tested against the pattern.
+ */
+export const matchGlob = (filePath: string, pattern: string): boolean => {
+  return path.matchesGlob(pattern.includes('/') ? filePath : path.basename(filePath), pattern);
+};
+
+export type DiffEntry = {
+  state: 'equal' | 'distinct' | 'left' | 'right';
+  name1?: string;
+  relativePath: string;
+};
+
+export async function compareDirectories(dir1: string, dir2: string): Promise<DiffEntry[]> {
+  async function getFiles(dir: string, rel = ''): Promise<Map<string, string>> {
+    const entries = new Map<string, string>();
+    for (const item of await fs.promises.readdir(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, item.name);
+      const relPath = rel ? path.join(rel, item.name) : item.name;
+      // For symlinks, stat the target to determine if it's a file or directory
+      const isDir =
+        item.isDirectory() ||
+        (item.isSymbolicLink() && (await fs.promises.stat(fullPath)).isDirectory());
+      if (isDir) {
+        for (const [k, v] of await getFiles(fullPath, relPath)) {
+          entries.set(k, v);
+        }
+      } else if (item.isFile() || item.isSymbolicLink()) {
+        entries.set(relPath, fullPath);
+      }
+    }
+    return entries;
+  }
+
+  const files1 = await getFiles(dir1);
+  const files2 = await getFiles(dir2);
+  const results: DiffEntry[] = [];
+
+  for (const relFile of new Set([...files1.keys(), ...files2.keys()])) {
+    const name = path.basename(relFile);
+    const relDir = path.dirname(relFile);
+    const relativePath = relDir === '.' ? '' : relDir;
+
+    if (!files1.has(relFile)) {
+      results.push({ state: 'right', relativePath });
+      continue;
+    }
+    if (!files2.has(relFile)) {
+      results.push({ state: 'left', name1: name, relativePath });
+      continue;
+    }
+
+    const content1 = await fs.promises.readFile(files1.get(relFile)!);
+    const content2 = await fs.promises.readFile(files2.get(relFile)!);
+    results.push({
+      state: content1.equals(content2) ? 'equal' : 'distinct',
+      name1: name,
+      relativePath,
+    });
+  }
+
+  return results;
+}
 
 const UNPACKED_ASAR_PATH = path.join('Contents', 'Resources', 'app.asar.unpacked');
 
@@ -67,9 +130,7 @@ const isSingleArchFile = (relativePath: string, opts: GetAllAppFilesOpts): boole
     return false;
   }
 
-  return minimatch(unpackedPath, opts.singleArchFiles, {
-    matchBase: true,
-  });
+  return matchGlob(unpackedPath, opts.singleArchFiles);
 };
 
 /**
