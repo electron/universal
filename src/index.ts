@@ -1,18 +1,27 @@
+import { execFile as execFileCb } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { promisify } from 'node:util';
 
 import * as asar from '@electron/asar';
-import { spawn } from '@malept/cross-spawn-promise';
-import * as dircompare from 'dir-compare';
-import { minimatch } from 'minimatch';
 import plist from 'plist';
 
 import { AsarMode, detectAsarMode, isUniversalMachO, mergeASARs } from './asar-utils.js';
-import { AppFile, AppFileType, fsMove, getAllAppFiles, readMachOHeader } from './file-utils.js';
+import {
+  AppFile,
+  AppFileType,
+  compareDirectories,
+  fsMove,
+  getAllAppFiles,
+  matchGlob,
+  readMachOHeader,
+} from './file-utils.js';
 import { sha } from './sha.js';
 import { d } from './debug.js';
 import { computeIntegrityData } from './integrity.js';
+
+const execFile = promisify(execFileCb);
 
 /**
  * Options to pass into the {@link makeUniversalApp} function.
@@ -125,11 +134,11 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       // On APFS (standard on modern macOS), -c does a copy-on-write clone
       // that's near-instant even for multi-hundred-MB apps.
       d('copying x64 app as starter template via APFS clone (cp -cR)');
-      await spawn('cp', ['-cR', opts.x64AppPath, tmpApp]);
+      await execFile('cp', ['-cR', opts.x64AppPath, tmpApp]);
     } catch {
       // -c fails on non-APFS volumes; fall back to a regular copy.
       d('APFS clone unsupported, falling back to regular cp -R');
-      await spawn('cp', ['-R', opts.x64AppPath, tmpApp]);
+      await execFile('cp', ['-R', opts.x64AppPath, tmpApp]);
     }
 
     const uniqueToX64: string[] = [];
@@ -194,7 +203,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       if (x64Sha === arm64Sha) {
         if (
           opts.x64ArchFiles === undefined ||
-          !minimatch(machOFile.relativePath, opts.x64ArchFiles, { matchBase: true })
+          !matchGlob(machOFile.relativePath, opts.x64ArchFiles)
         ) {
           throw new Error(
             `Detected file "${machOFile.relativePath}" that's the same in both x64 and arm64 builds and not covered by the ` +
@@ -214,7 +223,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
         first,
         second,
       });
-      await spawn('lipo', [
+      await execFile('lipo', [
         first,
         second,
         '-create',
@@ -232,12 +241,11 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
      */
     if (x64AsarMode === AsarMode.NO_ASAR) {
       d('checking if the x64 and arm64 app folders are identical');
-      const comparison = await dircompare.compare(
+      const diffSet = await compareDirectories(
         path.resolve(tmpApp, 'Contents', 'Resources', 'app'),
         path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app'),
-        { compareSize: true, compareContent: true },
       );
-      const differences = comparison.diffSet!.filter((difference) => difference.state !== 'equal');
+      const differences = diffSet.filter((difference) => difference.state !== 'equal');
       d(`Found ${differences.length} difference(s) between the x64 and arm64 folders`);
       const nonMergedDifferences = differences.filter(
         (difference) =>
@@ -390,8 +398,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
       }
 
       const injectAsarIntegrity =
-        !opts.infoPlistsToIgnore ||
-        minimatch(plistFile.relativePath, opts.infoPlistsToIgnore, { matchBase: true });
+        !opts.infoPlistsToIgnore || matchGlob(plistFile.relativePath, opts.infoPlistsToIgnore);
       const mergedPlist = injectAsarIntegrity
         ? { ...x64Plist, ElectronAsarIntegrity: generatedIntegrity }
         : { ...x64Plist };
@@ -412,7 +419,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
 
     d('moving final universal app to target destination');
     await fs.promises.mkdir(path.dirname(opts.outAppPath), { recursive: true });
-    await spawn('mv', [tmpApp, opts.outAppPath]);
+    await fsMove(tmpApp, opts.outAppPath);
   } catch (err) {
     throw err;
   } finally {
