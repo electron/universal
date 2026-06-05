@@ -37,7 +37,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@electron/get": "^4.0.0",
+    "@electron/get": "^5.0.0",
     "@tsconfig/node22": "^22.0.1",
     "@types/cross-zip": "^4.0.1",
     "@types/debug": "^4.1.10",
