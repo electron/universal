@@ -60,6 +60,63 @@ describe.concurrent('makeUniversalApp', () => {
     await verifyApp(expect, out, true);
   });
 
+  describe('nonBinaryFilesToIgnore', () => {
+    const templateWithCatalog = (name: string, arch: 'x64' | 'arm64', catalog: string) =>
+      templateApp(name, arch, async (appPath) => {
+        const { testPath } = await createStagingAppDir(name);
+        await createPackage(testPath, path.resolve(appPath, 'Contents', 'Resources', 'app.asar'));
+        await fs.promises.writeFile(
+          path.resolve(appPath, 'Contents', 'Resources', 'Assets.car'),
+          catalog,
+        );
+      });
+
+    it(
+      'throws when a non-binary file differs across arches and is not allowlisted',
+      { timeout: VERIFY_APP_TIMEOUT },
+      async ({ expect }) => {
+        const x64AppPath = await templateWithCatalog('NonBinaryX64.app', 'x64', 'x64-catalog');
+        const arm64AppPath = await templateWithCatalog(
+          'NonBinaryArm64.app',
+          'arm64',
+          'arm64-catalog',
+        );
+        const out = path.resolve(await mkOutDir(), 'NonBinaryError.app');
+        await expect(
+          makeUniversalApp({ x64AppPath, arm64AppPath, outAppPath: out, mergeASARs: true }),
+        ).rejects.toThrow(
+          /Expected all non-binary files to have identical SHAs when creating a universal build but "Contents\/Resources\/Assets\.car" did not/,
+        );
+      },
+    );
+
+    it(
+      'keeps the x64 copy of a differing non-binary file matched by `nonBinaryFilesToIgnore`',
+      { timeout: VERIFY_APP_TIMEOUT },
+      async ({ expect }) => {
+        const x64AppPath = await templateWithCatalog('NonBinaryOkX64.app', 'x64', 'x64-catalog');
+        const arm64AppPath = await templateWithCatalog(
+          'NonBinaryOkArm64.app',
+          'arm64',
+          'arm64-catalog',
+        );
+        const out = path.resolve(await mkOutDir(), 'NonBinaryOk.app');
+        await makeUniversalApp({
+          x64AppPath,
+          arm64AppPath,
+          outAppPath: out,
+          mergeASARs: true,
+          nonBinaryFilesToIgnore: 'Assets.car',
+        });
+        const merged = await fs.promises.readFile(
+          path.resolve(out, 'Contents', 'Resources', 'Assets.car'),
+          'utf-8',
+        );
+        expect(merged).toBe('x64-catalog');
+      },
+    );
+  });
+
   describe('force', () => {
     it('throws an error if `out` bundle already exists and `force` is `false`', async ({
       expect,
