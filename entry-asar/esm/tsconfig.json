@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es2022",
+    "lib": ["es2022"],
+    "sourceMap": true,
+    "strict": true,
+    "rootDir": ".",
+    "outDir": ".",
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "declaration": false,
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["*.mts", "../ambient.d.ts"],
+  "exclude": []
+}

@@ -15,6 +15,11 @@ export enum AsarMode {
   HAS_ASAR,
 }
 
+export enum EntrypointModule {
+  ESM = 'esm',
+  CJS = 'cjs',
+}
+
 export type MergeASARsOptions = {
   x64AsarPath: string;
   arm64AsarPath: string;
@@ -34,6 +39,40 @@ export const detectAsarMode = async (appPath: string) => {
 
   d('determined has asar');
   return AsarMode.HAS_ASAR;
+};
+
+/**
+ * Determine an app entrypoint's module format from its package.json using
+ * Node's own resolution rules. Anything we cannot positively identify as ESM
+ * is treated as CJS, so we never ship an ESM shim on a guess.
+ */
+export const detectEntrypointModule = (packageJson: unknown): EntrypointModule => {
+  if (typeof packageJson !== 'object' || packageJson === null) {
+    return EntrypointModule.CJS;
+  }
+  const pj = packageJson as { main?: unknown; type?: unknown };
+  const main = typeof pj.main === 'string' && pj.main.length > 0 ? pj.main : 'index.js';
+  if (main.endsWith('.mjs')) return EntrypointModule.ESM;
+  if (main.endsWith('.cjs')) return EntrypointModule.CJS;
+  // .js / .json / .node / extensionless -> governed by the package "type" field
+  return pj.type === 'module' ? EntrypointModule.ESM : EntrypointModule.CJS;
+};
+
+/**
+ * Given the detected module format of each architecture's entrypoint, decide
+ * which shim to ship. Refuses to build a universal app when the two
+ * architectures disagree, since a single shim cannot satisfy both.
+ */
+export const resolveShimModule = (
+  x64: EntrypointModule,
+  arm64: EntrypointModule,
+): EntrypointModule => {
+  if (x64 !== arm64) {
+    throw new Error(
+      `Can't create universal binary: the x64 app entrypoint is ${x64.toUpperCase()} but the arm64 app entrypoint is ${arm64.toUpperCase()}. Both architectures must use the same module system (CommonJS or ESM).`,
+    );
+  }
+  return x64;
 };
 
 export const generateAsarIntegrity = (asarPath: string) => {

@@ -14,6 +14,6 @@
     "declaration": false,
     "ignoreDeprecations": "6.0"
   },
-  "include": ["entry-asar"],
-  "exclude": []
+  "include": ["entry-asar/*.ts"],
+  "exclude": ["entry-asar/esm"]
 }

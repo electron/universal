@@ -7,7 +7,15 @@ import { promisify } from 'node:util';
 import * as asar from '@electron/asar';
 import plist from 'plist';
 
-import { AsarMode, detectAsarMode, isUniversalMachO, mergeASARs } from './asar-utils.js';
+import {
+  AsarMode,
+  detectAsarMode,
+  detectEntrypointModule,
+  EntrypointModule,
+  isUniversalMachO,
+  mergeASARs,
+  resolveShimModule,
+} from './asar-utils.js';
 import {
   AppFile,
   AppFileType,
@@ -270,17 +278,37 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
 
         const entryAsar = path.resolve(tmpDir, 'entry-asar');
         await fs.promises.mkdir(entryAsar, { recursive: true });
-        await fs.promises.cp(
-          path.resolve(import.meta.dirname, '..', 'entry-asar', 'no-asar.js'),
-          path.resolve(entryAsar, 'index.js'),
-        );
+
         let pj = JSON.parse(
           await fs.promises.readFile(
             path.resolve(opts.x64AppPath, 'Contents', 'Resources', 'app', 'package.json'),
             'utf8',
           ),
         );
-        pj.main = 'index.js';
+        const arm64Pj = JSON.parse(
+          await fs.promises.readFile(
+            path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app', 'package.json'),
+            'utf8',
+          ),
+        );
+        const shimModule = resolveShimModule(
+          detectEntrypointModule(pj),
+          detectEntrypointModule(arm64Pj),
+        );
+
+        if (shimModule === EntrypointModule.ESM) {
+          await fs.promises.cp(
+            path.resolve(import.meta.dirname, '..', 'entry-asar', 'esm', 'no-asar.mjs'),
+            path.resolve(entryAsar, 'index.mjs'),
+          );
+          pj.main = 'index.mjs';
+        } else {
+          await fs.promises.cp(
+            path.resolve(import.meta.dirname, '..', 'entry-asar', 'no-asar.js'),
+            path.resolve(entryAsar, 'index.js'),
+          );
+          pj.main = 'index.js';
+        }
         await fs.promises.writeFile(
           path.resolve(entryAsar, 'package.json'),
           JSON.stringify(pj) + '\n',
@@ -353,10 +381,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
 
         const entryAsar = path.resolve(tmpDir, 'entry-asar');
         await fs.promises.mkdir(entryAsar, { recursive: true });
-        await fs.promises.cp(
-          path.resolve(import.meta.dirname, '..', 'entry-asar', 'has-asar.js'),
-          path.resolve(entryAsar, 'index.js'),
-        );
+
         let pj = JSON.parse(
           (
             await asar.extractFile(
@@ -365,7 +390,32 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
             )
           ).toString('utf8'),
         );
-        pj.main = 'index.js';
+        const arm64Pj = JSON.parse(
+          asar
+            .extractFile(
+              path.resolve(opts.arm64AppPath, 'Contents', 'Resources', 'app.asar'),
+              'package.json',
+            )
+            .toString('utf8'),
+        );
+        const shimModule = resolveShimModule(
+          detectEntrypointModule(pj),
+          detectEntrypointModule(arm64Pj),
+        );
+
+        if (shimModule === EntrypointModule.ESM) {
+          await fs.promises.cp(
+            path.resolve(import.meta.dirname, '..', 'entry-asar', 'esm', 'has-asar.mjs'),
+            path.resolve(entryAsar, 'index.mjs'),
+          );
+          pj.main = 'index.mjs';
+        } else {
+          await fs.promises.cp(
+            path.resolve(import.meta.dirname, '..', 'entry-asar', 'has-asar.js'),
+            path.resolve(entryAsar, 'index.js'),
+          );
+          pj.main = 'index.js';
+        }
         await fs.promises.writeFile(
           path.resolve(entryAsar, 'package.json'),
           JSON.stringify(pj) + '\n',
