@@ -5,7 +5,14 @@ import path from 'node:path';
 
 import { createPackage } from '@electron/asar';
 
-import { appsDir, asarsDir, downloadElectronZip, fixtureDir, templateApp } from './util.js';
+import {
+  appsDir,
+  asarsDir,
+  downloadElectronZip,
+  ELECTRON_28_VERSION,
+  fixtureDir,
+  templateApp,
+} from './util.js';
 
 // Build an app source directory whose entrypoint is an ES module. The
 // `package.json` and `index.mjs` are byte-identical across arches (so
@@ -69,6 +76,10 @@ export default async () => {
   // the concurrent test suite) so they all hit the cached zip.
   await downloadElectronZip('arm64');
   await downloadElectronZip('x64');
+  // The ESM fixtures below run on Electron 28, so warm that version's cache for
+  // both arches too before the parallel `templateApp` calls race on it.
+  await downloadElectronZip('arm64', ELECTRON_28_VERSION);
+  await downloadElectronZip('x64', ELECTRON_28_VERSION);
 
   await Promise.all([
     templateApp('Arm64Asar.app', 'arm64', async (appPath) => {
@@ -137,33 +148,57 @@ export default async () => {
   );
 
   await Promise.all([
-    templateApp('X64AsarEsm.app', 'x64', async (appPath) => {
-      await createPackage(
-        x64EsmAsarDir,
-        path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
-      );
-    }),
+    templateApp(
+      'X64AsarEsm.app',
+      'x64',
+      async (appPath) => {
+        await createPackage(
+          x64EsmAsarDir,
+          path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+        );
+      },
+      ELECTRON_28_VERSION,
+    ),
 
-    templateApp('Arm64AsarEsmExtraFile.app', 'arm64', async (appPath) => {
-      await createPackage(
-        arm64EsmAsarDir,
-        path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
-      );
-    }),
+    templateApp(
+      'Arm64AsarEsmExtraFile.app',
+      'arm64',
+      async (appPath) => {
+        await createPackage(
+          arm64EsmAsarDir,
+          path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+        );
+      },
+      ELECTRON_28_VERSION,
+    ),
 
-    templateApp('X64NoAsarEsm.app', 'x64', async (appPath) => {
-      await fs.promises.cp(x64EsmNoAsarDir, path.resolve(appPath, 'Contents', 'Resources', 'app'), {
-        recursive: true,
-        verbatimSymlinks: true,
-      });
-    }),
+    templateApp(
+      'X64NoAsarEsm.app',
+      'x64',
+      async (appPath) => {
+        await fs.promises.cp(
+          x64EsmNoAsarDir,
+          path.resolve(appPath, 'Contents', 'Resources', 'app'),
+          {
+            recursive: true,
+            verbatimSymlinks: true,
+          },
+        );
+      },
+      ELECTRON_28_VERSION,
+    ),
 
-    templateApp('Arm64NoAsarEsmExtraFile.app', 'arm64', async (appPath) => {
-      await fs.promises.cp(
-        arm64EsmNoAsarDir,
-        path.resolve(appPath, 'Contents', 'Resources', 'app'),
-        { recursive: true, verbatimSymlinks: true },
-      );
-    }),
+    templateApp(
+      'Arm64NoAsarEsmExtraFile.app',
+      'arm64',
+      async (appPath) => {
+        await fs.promises.cp(
+          arm64EsmNoAsarDir,
+          path.resolve(appPath, 'Contents', 'Resources', 'app'),
+          { recursive: true, verbatimSymlinks: true },
+        );
+      },
+      ELECTRON_28_VERSION,
+    ),
   ]);
 };
