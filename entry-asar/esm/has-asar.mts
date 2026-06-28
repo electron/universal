@@ -1,7 +1,6 @@
 import { app } from 'electron';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 const require = createRequire(import.meta.url);
 
@@ -26,5 +25,10 @@ async function setPaths(platform: string) {
   }
 
   process._archPath = require.resolve(`../${asarFile}`);
-  await import(pathToFileURL(process._archPath).href);
+  try {
+    await import(process._archPath);
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  }
 }
