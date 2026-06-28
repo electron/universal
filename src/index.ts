@@ -178,7 +178,7 @@ export const makeUniversalApp = async (opts: MakeUniversalOpts): Promise<void> =
           continue;
         }
         throw new Error(
-          `Expected all non-binary files to have identical SHAs when creating a universal build but "${file.relativePath}" did not`,
+          `Expected all plain files (those that are not Mach-O binaries, V8 snapshots, Info.plist files, or ASAR archives) to have identical SHAs when creating a universal build but "${file.relativePath}" did not`,
         );
       }
     }
