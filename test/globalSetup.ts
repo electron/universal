@@ -7,9 +7,12 @@ import { createPackage } from '@electron/asar';
 
 import { appsDir, asarsDir, downloadElectronZip, fixtureDir, templateApp } from './util.js';
 
-// Build an app source directory whose entrypoint is an ES module. The `suffix`
-// lets two arches diverge so that `makeUniversalApp` is forced to create a shim.
-const createEsmAppDir = async (name: string, suffix: string) => {
+// Build an app source directory whose entrypoint is an ES module. The
+// `package.json` and `index.mjs` are byte-identical across arches (so
+// `makeUniversalApp`'s identical-SHA check for plain files passes); divergence
+// is introduced via a uniquely-named `extraFile`, which forces a shim to be
+// created the same way the non-ESM fixtures do.
+const createEsmAppDir = async (name: string, extraFile?: string) => {
   const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `${name}-`));
   await fs.promises.writeFile(
     path.join(dir, 'package.json'),
@@ -18,9 +21,12 @@ const createEsmAppDir = async (name: string, suffix: string) => {
   );
   await fs.promises.writeFile(
     path.join(dir, 'index.mjs'),
-    `console.log('I am an ESM app${suffix}', process.arch);\nprocess.exit(0);\n`,
+    `console.log('I am an ESM app', process.arch);\nprocess.exit(0);\n`,
     'utf8',
   );
+  if (extraFile) {
+    await fs.promises.writeFile(path.join(dir, extraFile), 'extra\n', 'utf8');
+  }
   return dir;
 };
 
@@ -110,10 +116,10 @@ export default async () => {
 
   // ESM entrypoint fixtures (regression coverage for ERR_REQUIRE_ESM when the
   // x64/arm64 asars diverge). The two arches differ so a shim is generated.
-  const x64EsmAsarDir = await createEsmAppDir('X64AsarEsm', '');
-  const arm64EsmAsarDir = await createEsmAppDir('Arm64AsarEsmExtraFile', ' (extra)');
-  const x64EsmNoAsarDir = await createEsmAppDir('X64NoAsarEsm', '');
-  const arm64EsmNoAsarDir = await createEsmAppDir('Arm64NoAsarEsmExtraFile', ' (extra)');
+  const x64EsmAsarDir = await createEsmAppDir('X64AsarEsm');
+  const arm64EsmAsarDir = await createEsmAppDir('Arm64AsarEsmExtraFile', 'extra-file.txt');
+  const x64EsmNoAsarDir = await createEsmAppDir('X64NoAsarEsm');
+  const arm64EsmNoAsarDir = await createEsmAppDir('Arm64NoAsarEsmExtraFile', 'extra-file.txt');
 
   await Promise.all([
     templateApp('X64AsarEsm.app', 'x64', async (appPath) => {
