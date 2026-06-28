@@ -17,7 +17,9 @@ import * as fileUtils from '../dist/file-utils.js';
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
 // plus some tests create fixtures at runtime
-export const VERIFY_APP_TIMEOUT = 80 * 1000;
+// The heavy verifyApp integration tests run ~60s each on their own and the suite
+// is contended under `maxConcurrency`, so give them plenty of headroom in CI.
+export const VERIFY_APP_TIMEOUT = 180 * 1000;
 
 export const fixtureDir = path.resolve(import.meta.dirname, 'fixtures');
 export const asarsDir = path.resolve(fixtureDir, 'asars');
