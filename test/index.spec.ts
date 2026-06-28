@@ -8,12 +8,13 @@ import { makeUniversalApp } from '../dist/index.js';
 import { fsMove } from '../src/file-utils.js';
 import {
   createStagingAppDir,
+  ensureUniversal,
   generateNativeApp,
   templateApp,
   VERIFY_APP_TIMEOUT,
   verifyApp,
 } from './util.js';
-import { createPackage, createPackageWithOptions } from '@electron/asar';
+import { createPackage, createPackageWithOptions, extractFile } from '@electron/asar';
 
 const appsPath = path.resolve(import.meta.dirname, 'fixtures', 'apps');
 
@@ -131,7 +132,16 @@ describe.concurrent('makeUniversalApp', () => {
           arm64AppPath: path.resolve(appsPath, 'Arm64AsarEsmExtraFile.app'),
           outAppPath: out,
         });
-        await verifyApp(expect, out);
+        // Launches both arches; asserts each prints its arch, proving the ESM
+        // shim loads the per-arch entrypoint. We can't snapshot the file tree
+        // here because no baseline is committed (it can only be generated on
+        // macOS), so assert the emitted shim + `main` directly instead.
+        await ensureUniversal(expect, out);
+        const appAsar = path.resolve(out, 'Contents', 'Resources', 'app.asar');
+        const pj = JSON.parse(extractFile(appAsar, 'package.json').toString('utf8'));
+        expect(pj.main).toBe('index.mjs');
+        const shim = extractFile(appAsar, 'index.mjs').toString('utf8');
+        expect(shim).toContain('await import');
       },
     );
 
@@ -400,7 +410,17 @@ describe.concurrent('makeUniversalApp', () => {
           arm64AppPath: path.resolve(appsPath, 'Arm64NoAsarEsmExtraFile.app'),
           outAppPath: out,
         });
-        await verifyApp(expect, out);
+        // Launches both arches; asserts each prints its arch, proving the ESM
+        // shim loads the per-arch entrypoint. We can't snapshot the file tree
+        // here because no baseline is committed (it can only be generated on
+        // macOS), so assert the emitted shim + `main` directly instead. The
+        // no-asar path also packages the shim folder into `app.asar`.
+        await ensureUniversal(expect, out);
+        const appAsar = path.resolve(out, 'Contents', 'Resources', 'app.asar');
+        const pj = JSON.parse(extractFile(appAsar, 'package.json').toString('utf8'));
+        expect(pj.main).toBe('index.mjs');
+        const shim = extractFile(appAsar, 'index.mjs').toString('utf8');
+        expect(shim).toContain('await import');
       },
     );
 
