@@ -20,7 +20,10 @@
   "files": [
     "dist/*",
     "entry-asar/*",
+    "entry-asar/esm/*",
     "!entry-asar/**/*.ts",
+    "!entry-asar/**/*.mts",
+    "!entry-asar/**/tsconfig.json",
     "README.md"
   ],
   "author": "Samuel Attard",
@@ -28,7 +31,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.entry-asar.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.entry-asar.json && tsc -p entry-asar/esm/tsconfig.json",
     "build:docs": "typedoc",
     "lint": "oxfmt --check . && oxlint",
     "lint:fix": "oxfmt --write . && oxlint --fix",

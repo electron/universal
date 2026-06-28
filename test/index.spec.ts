@@ -122,6 +122,20 @@ describe.concurrent('makeUniversalApp', () => {
     );
 
     it(
+      'should create a shim for ESM entrypoints if asars are different between architectures',
+      { timeout: VERIFY_APP_TIMEOUT },
+      async ({ expect }) => {
+        const out = path.resolve(await mkOutDir(), 'ShimmedAsarEsm.app');
+        await makeUniversalApp({
+          x64AppPath: path.resolve(appsPath, 'X64AsarEsm.app'),
+          arm64AppPath: path.resolve(appsPath, 'Arm64AsarEsmExtraFile.app'),
+          outAppPath: out,
+        });
+        await verifyApp(expect, out);
+      },
+    );
+
+    it(
       'should merge two different asars when `mergeASARs` is enabled',
       { timeout: VERIFY_APP_TIMEOUT },
       async ({ expect }) => {
@@ -373,6 +387,20 @@ describe.concurrent('makeUniversalApp', () => {
           outAppPath,
         });
         await verifyApp(expect, outAppPath);
+      },
+    );
+
+    it(
+      'should shim two different app folders with ESM entrypoints',
+      { timeout: VERIFY_APP_TIMEOUT },
+      async ({ expect }) => {
+        const out = path.resolve(await mkOutDir(), 'ShimNoAsarEsm.app');
+        await makeUniversalApp({
+          x64AppPath: path.resolve(appsPath, 'X64NoAsarEsm.app'),
+          arm64AppPath: path.resolve(appsPath, 'Arm64NoAsarEsmExtraFile.app'),
+          outAppPath: out,
+        });
+        await verifyApp(expect, out);
       },
     );
 

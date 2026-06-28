@@ -1,8 +1,28 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
+import { createPackage } from '@electron/asar';
+
 import { appsDir, asarsDir, downloadElectronZip, fixtureDir, templateApp } from './util.js';
+
+// Build an app source directory whose entrypoint is an ES module. The `suffix`
+// lets two arches diverge so that `makeUniversalApp` is forced to create a shim.
+const createEsmAppDir = async (name: string, suffix: string) => {
+  const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `${name}-`));
+  await fs.promises.writeFile(
+    path.join(dir, 'package.json'),
+    JSON.stringify({ name: 'app', type: 'module', main: 'index.mjs' }) + '\n',
+    'utf8',
+  );
+  await fs.promises.writeFile(
+    path.join(dir, 'index.mjs'),
+    `console.log('I am an ESM app${suffix}', process.arch);\nprocess.exit(0);\n`,
+    'utf8',
+  );
+  return dir;
+};
 
 // generates binaries from hello-world.c
 // hello-world-universal, hello-world-x86_64, hello-world-arm64
@@ -82,6 +102,44 @@ export default async () => {
     templateApp('X64NoAsar.app', 'x64', async (appPath) => {
       await fs.promises.cp(
         path.resolve(asarsDir, 'app'),
+        path.resolve(appPath, 'Contents', 'Resources', 'app'),
+        { recursive: true, verbatimSymlinks: true },
+      );
+    }),
+  ]);
+
+  // ESM entrypoint fixtures (regression coverage for ERR_REQUIRE_ESM when the
+  // x64/arm64 asars diverge). The two arches differ so a shim is generated.
+  const x64EsmAsarDir = await createEsmAppDir('X64AsarEsm', '');
+  const arm64EsmAsarDir = await createEsmAppDir('Arm64AsarEsmExtraFile', ' (extra)');
+  const x64EsmNoAsarDir = await createEsmAppDir('X64NoAsarEsm', '');
+  const arm64EsmNoAsarDir = await createEsmAppDir('Arm64NoAsarEsmExtraFile', ' (extra)');
+
+  await Promise.all([
+    templateApp('X64AsarEsm.app', 'x64', async (appPath) => {
+      await createPackage(
+        x64EsmAsarDir,
+        path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+      );
+    }),
+
+    templateApp('Arm64AsarEsmExtraFile.app', 'arm64', async (appPath) => {
+      await createPackage(
+        arm64EsmAsarDir,
+        path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
+      );
+    }),
+
+    templateApp('X64NoAsarEsm.app', 'x64', async (appPath) => {
+      await fs.promises.cp(x64EsmNoAsarDir, path.resolve(appPath, 'Contents', 'Resources', 'app'), {
+        recursive: true,
+        verbatimSymlinks: true,
+      });
+    }),
+
+    templateApp('Arm64NoAsarEsmExtraFile.app', 'arm64', async (appPath) => {
+      await fs.promises.cp(
+        arm64EsmNoAsarDir,
         path.resolve(appPath, 'Contents', 'Resources', 'app'),
         { recursive: true, verbatimSymlinks: true },
       );
