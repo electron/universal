@@ -10,8 +10,16 @@ import { appsDir, asarsDir, downloadElectronZip, fixtureDir, templateApp } from 
 // Build an app source directory whose entrypoint is an ES module. The
 // `package.json` and `index.mjs` are byte-identical across arches (so
 // `makeUniversalApp`'s identical-SHA check for plain files passes); divergence
-// is introduced via a uniquely-named `extraFile`, which forces a shim to be
-// created the same way the non-ESM fixtures do.
+// is introduced via a uniquely-named `.bin` file.
+//
+// For the no-asar case the source directory is copied straight into
+// `Contents/Resources/app`, which sits in the bundle tree that
+// `makeUniversalApp` scans for mach-o parity. A `.bin` file is classified as a
+// V8 snapshot (SNAPSHOT) and so is excluded from that parity check, exactly the
+// way the existing non-ESM no-asar shim fixtures diverge (see the
+// `should shim two different app folders` test, which uses `hello-world.bin` /
+// `i-aint-got-no-rhythm.bin`). A loose plain file (e.g. a `.txt`) would instead
+// be treated as a unique PLAIN file and trip the parity guard, so we avoid it.
 const createEsmAppDir = async (name: string, extraFile?: string) => {
   const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), `${name}-`));
   await fs.promises.writeFile(
@@ -118,8 +126,15 @@ export default async () => {
   // x64/arm64 asars diverge). The two arches differ so a shim is generated.
   const x64EsmAsarDir = await createEsmAppDir('X64AsarEsm');
   const arm64EsmAsarDir = await createEsmAppDir('Arm64AsarEsmExtraFile', 'extra-file.txt');
-  const x64EsmNoAsarDir = await createEsmAppDir('X64NoAsarEsm');
-  const arm64EsmNoAsarDir = await createEsmAppDir('Arm64NoAsarEsmExtraFile', 'extra-file.txt');
+  // The no-asar fixtures are copied straight into the bundle tree, so they must
+  // diverge via uniquely-named `.bin` files (excluded from the mach-o parity
+  // guard as V8 snapshots) rather than a plain file. This mirrors the existing
+  // non-ESM `should shim two different app folders` test exactly.
+  const x64EsmNoAsarDir = await createEsmAppDir('X64NoAsarEsm', 'hello-world.bin');
+  const arm64EsmNoAsarDir = await createEsmAppDir(
+    'Arm64NoAsarEsmExtraFile',
+    'i-aint-got-no-rhythm.bin',
+  );
 
   await Promise.all([
     templateApp('X64AsarEsm.app', 'x64', async (appPath) => {
