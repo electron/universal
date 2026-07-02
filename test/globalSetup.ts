@@ -9,7 +9,7 @@ import {
   appsDir,
   asarsDir,
   downloadElectronZip,
-  ELECTRON_28_VERSION,
+  ELECTRON_43_VERSION,
   fixtureDir,
   templateApp,
 } from './util.js';
@@ -76,10 +76,10 @@ export default async () => {
   // the concurrent test suite) so they all hit the cached zip.
   await downloadElectronZip('arm64');
   await downloadElectronZip('x64');
-  // The ESM fixtures below run on Electron 28, so warm that version's cache for
+  // The ESM fixtures below run on Electron 43, so warm that version's cache for
   // both arches too before the parallel `templateApp` calls race on it.
-  await downloadElectronZip('arm64', ELECTRON_28_VERSION);
-  await downloadElectronZip('x64', ELECTRON_28_VERSION);
+  await downloadElectronZip('arm64', ELECTRON_43_VERSION);
+  await downloadElectronZip('x64', ELECTRON_43_VERSION);
 
   await Promise.all([
     templateApp('Arm64Asar.app', 'arm64', async (appPath) => {
@@ -157,7 +157,7 @@ export default async () => {
           path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
         );
       },
-      ELECTRON_28_VERSION,
+      ELECTRON_43_VERSION,
     ),
 
     templateApp(
@@ -169,7 +169,7 @@ export default async () => {
           path.resolve(appPath, 'Contents', 'Resources', 'app.asar'),
         );
       },
-      ELECTRON_28_VERSION,
+      ELECTRON_43_VERSION,
     ),
 
     templateApp(
@@ -185,7 +185,7 @@ export default async () => {
           },
         );
       },
-      ELECTRON_28_VERSION,
+      ELECTRON_43_VERSION,
     ),
 
     templateApp(
@@ -198,7 +198,7 @@ export default async () => {
           { recursive: true, verbatimSymlinks: true },
         );
       },
-      ELECTRON_28_VERSION,
+      ELECTRON_43_VERSION,
     ),
   ]);
 };

@@ -18,12 +18,12 @@ const require = createRequire(import.meta.url);
 import * as fileUtils from '../dist/file-utils.js';
 
 // The default Electron version used by the fixtures. The ESM integration
-// fixtures override this with `ELECTRON_28_VERSION` below.
+// fixtures override this with `ELECTRON_43_VERSION` below.
 export const DEFAULT_ELECTRON_VERSION = '27.0.0';
 
-// Resolved from the separately-declared `electron28` dev dependency so it tracks
-// whatever `electron@^28` resolves to in the lockfile.
-export const ELECTRON_28_VERSION = require('electron28/package.json').version as string;
+// Resolved from the separately-declared `electron43` dev dependency so it tracks
+// whatever `electron@^43` resolves to in the lockfile.
+export const ELECTRON_43_VERSION = require('electron43/package.json').version as string;
 
 // We do a LOT of verifications in `verifyApp` 😅
 // exec universal binary -> verify ALL asars -> verify ALL app dirs -> verify ALL asar integrity entries
