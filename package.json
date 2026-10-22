@@ -56,7 +56,7 @@
     "typedoc": "~0.28.0",
     "typescript": "^6.0.2",
     "vite": "^8.0.16",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "@electron/asar": "^4.0.0",
